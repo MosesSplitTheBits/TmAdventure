@@ -1,8 +1,10 @@
 #include "Player.h"
-#include "Game.h" // Required to access Game::objectAt
+#include "Game.h"
+#include "Key.h"
 #include "Direction.h"
 #include <iostream>
 #include <cctype>
+#include "utils.h"
 
 // 1. SET DIRECTION LOGIC
 void Player::keyPreesed(char k)
@@ -88,4 +90,27 @@ void Player::useKey(int keyId) {
 
 bool Player::hasKeyForDoor(int doorKeyId) const {
     return hasKey(doorKeyId);
+}
+
+void Player::tryDropKey(Game& game) {
+    int droppedKeyId = this->dropKey(); // הפונקציה הפנימית הקיימת שלך
+    if (droppedKeyId == -1) return;
+
+    int dropX = p.getX();
+    int dropY = p.getY();
+    Direction dir = p.getDir();
+    int keyX = dropX - dir.dx();
+    int keyY = dropY - dir.dy();
+
+    // הוספת המפתח למשחק
+    game.addObject(std::make_unique<Key>(keyX, keyY, droppedKeyId));
+    
+    // עדכון הזיכרון של המסך
+    game.getScreen().setCharAt(keyX, keyY, 'K');
+    
+    // עדכון מסך
+    gotoxy(keyX, keyY);
+    std::cout << 'K' << std::flush;
+    
+    this->draw();
 }

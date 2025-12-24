@@ -4,53 +4,44 @@
 const int Screen::MAX_X;
 const int Screen::MAX_Y;
 
-bool Screen::isWall(int x, int y) const
+
+void Screen::loadMap(const std::vector<std::string>& mapData) 
 {
-    return getCharAt(x, y) == 'W';
+    // ניקוי המסך
+    for (int i = 0; i <= MAX_Y; ++i) {
+        for (int j = 0; j <= MAX_X; ++j) {
+            board[i][j] = ' ';
+            colors[i][j] = 7; // לבן
+        }
+    }
+
+    // טעינת המפה עם הזזה (Offset)
+    for (int i = 0; i < (int)mapData.size(); ++i) {
+        // בדיקה שלא חורגים מהגבולות
+        if (i > MAX_Y) break;
+
+        for (int j = 0; j < (int)mapData[i].size(); ++j) {
+            if (j > MAX_X) break;
+            
+            // כאן אנחנו מוסיפים את ה-OFFSET לשורה
+            board[i][j] = mapData[i][j];
+        }
+    }
 }
 
-bool Screen::isKey(int x, int y) const
-{
-    return getCharAt(x, y) == 'K';
-}
 
-bool Screen::isTorch(int x, int y) const
+void Screen::draw() const 
 {
-    return getCharAt(x, y) == '!';
-}
-
-bool Screen::isBomb(int x, int y) const
-{
-    return getCharAt(x, y) == '@';
-}
-
-bool Screen::isObstacle(int x, int y) const
-{
-    return getCharAt(x, y) == '*';
-}
-
-bool Screen::isSpring(int x, int y) const 
-{
-    return getCharAt(x, y) == '^';
-}
-
-bool Screen::isSwitchOn(int x, int y) const 
-{
-    return getCharAt(x, y) == 'S';
-}
-
-bool Screen::isSwitchOff(int x, int y) const
-{
-    return getCharAt(x, y) == 's';
-}
-
-bool Screen::isRiddle(int x, int y) const
-{
-    return getCharAt(x, y) == '?';
-}
-
-bool Screen::isDoor(int x, int y) const
-{
-    return getCharAt(x, y) == '4';
+    for (int i = 0; i <= MAX_Y; ++i) {
+        // הזזת הסמן לתחילת השורה בלבד (הרבה יותר מהיר)
+        gotoxy(0, i); 
+        
+        for (int j = 0; j <= MAX_X; ++j) {
+            gotoxy(j, i);
+            setTextColor(colors[i][j]);
+            std::cout << board[i][j];
+        }
+    }
+    setTextColor(7); // החזרת צבע לבן
 }
 

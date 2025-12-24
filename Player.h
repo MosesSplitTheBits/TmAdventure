@@ -38,6 +38,7 @@ public:
     void pickKey(int keyId) { playerInventory = { 'K', keyId }; }
     int dropKey();
     void useKey(int keyId);
+    void tryDropKey(Game& game);
     bool hasKeyForDoor(int doorKeyId) const;
     
     

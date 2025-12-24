@@ -22,15 +22,11 @@ namespace LevelData {
 		"W                           W     ***   W                                      W",  // 13
 		"W                           W           W                                      W",  // 14
 		"W                           W           W                                      W",  // 15
-		"W                           W                                                  W",  // 16
-		"W                           W                                                  W",  // 17
-		"W                           W                                                  W",  // 18
-		"W                           W           W                                      W",  // 19
-		"W                           W           W                       4444           W",  // 20
-		"W                           W           W                       4444           W",  // 21
-		"W                           W           W                       4444           W",  // 22
-		"W                           W           W                       4444           W",  // 23
-		"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"   // 24
+		"W                           W                                  4444            W",  // 16
+		"W                           W                                  4444            W",  // 17
+		"W                           W                                  4444            W",  // 18
+		"W                           W           W                      4444            W",  // 19
+        "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",  // 20
     };
 
     const std::vector<std::string> MAP_2 = {

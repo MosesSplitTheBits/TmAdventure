@@ -14,6 +14,7 @@
 #include "Obstacle.h"
 #include "Puzzle.h"
 #include "Riddle.h" 
+#include "StatusBar.h"
 
 class Game {
 private:
@@ -32,6 +33,8 @@ private:
 
     Room* currentRoom;
     PuzzleManager puzzles;
+    
+    StatusBar statusBar;
 
 public:
     Game(Screen& s, Player& p1, Player& p2, Room* startRoom);
@@ -63,20 +66,17 @@ public:
     // Getters for Interactions
     PuzzleManager& getPuzzles() { return puzzles; }
     Screen& getScreen() { return screen; }
+    Player& getp1() { return p1; }
+    Player& getp2() { return p2; }
 
-    // Game Logic
-    void updateProximityDoors();
-    bool withinRadius2(const Point& a, const Point& b);
-    void animateDoorOpening(int id);
-    void makeDoorAreaHollow(int id);
-    
+    StatusBar& getStatusBar() { return statusBar; }
+
+    // Game Logic    
     
     // Generic Interaction Handler
     bool handlePlayerInteraction(Player& player);
 
-    void handleDrop(Player& player);
     void checkKeyPickup(Player& player); 
-    void updateSwitches();
 };
 
 // --- IMPORTANT: This must be OUTSIDE the class ---

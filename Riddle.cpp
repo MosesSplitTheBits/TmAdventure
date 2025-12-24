@@ -1,4 +1,7 @@
 #include "Riddle.h"
+#include "Game.h"
+#include <iostream>
+#include <string>
 
 std::vector<std::unique_ptr<Riddle>> Riddle::createFromMap(const std::vector<std::string>& mapData, int roomId) {
     std::vector<std::unique_ptr<Riddle>> riddles;

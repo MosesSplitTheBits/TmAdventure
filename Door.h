@@ -31,4 +31,12 @@ public:
     bool isSwitchControlled() const { return switchControlled; }
 
     virtual bool interact(Game& game, Player& player) override;
+
+     // פונקציה חדשה לניהול פתיחה בקרבה
+    static void updateProximityDoors(Game& game);
+    
+
+    // animations
+    static void animateOpening(int id, const std::vector<Door*>& doors, Screen& screen);
+    static void makeDoorHollow(int id, const std::vector<Door*>& doors, Screen& screen);
 };

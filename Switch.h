@@ -18,4 +18,7 @@ public:
 
     // Static factory method
     static std::vector<std::unique_ptr<Switch>> createFromMap(const std::vector<std::string>& mapData, int roomId);
+
+    // static function to update switches
+    static void updateAllSwitches(Game& game);
 };
