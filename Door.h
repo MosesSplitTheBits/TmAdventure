@@ -3,7 +3,6 @@
 #include "Room.h"
 
 
-// Door class representing a door in the game
 class Door : public GameObject {
 private:
     Room* targetRoom = nullptr;
