@@ -52,7 +52,11 @@ void Player::move(Game& game)
     underChar = screen.getCharAt(p.getX(), p.getY());
     if (underChar == '?') underChar = ' ';
     
-    draw();       
+    //dont draw player if waiting at door
+    
+    if (!waitingAtDoor) { 
+        draw();       
+    }      
 }
 
 void Player::draw()

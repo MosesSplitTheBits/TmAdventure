@@ -50,17 +50,39 @@ bool Door::interact(Game& game, Player& player) {
         Room* target = getTarget();
         char doorType = getChar();
 
-        // 1. Normal Door: Go to next/prev room
-        if (target) {
-            game.loadLevel(target, doorType == '3');
-            system("cls");
-            game.getScreen().draw();
-            return true;
+        // 1. Transition Doors (3 or 4) - Need both players
+        if (doorType == '3' || doorType == '4') {
+            if (target) {
+                // Get both players
+                Player& p1 = game.getp1();
+                Player& p2 = game.getp2();
+                
+                // If this player isn't waiting yet, set them to waiting
+                if (!player.isWaitingAtDoor()) {
+                    player.setWaitingAtDoor(true);     // Mark as waiting
+                    player.getPosition().erase();      // Make them disappear
+                }
+                
+                // NOW check if BOTH players are waiting
+                if (p1.isWaitingAtDoor() && p2.isWaitingAtDoor()) {
+                    // Reset waiting flags before transition
+                    p1.setWaitingAtDoor(false);
+                    p2.setWaitingAtDoor(false);
+                    
+                    // Load the next level
+                    game.loadLevel(target, doorType == '3');
+                    system("cls");
+                    game.getScreen().draw();
+                    return true;
+                }
+                
+                return true; // Still waiting for other player
+            }
         }
         
         // 2. Victory Door: Type '4', Open, and No Target (Room 3)
         if (doorType == '4' && target == nullptr) {
-            player.setWon(true);
+            player.setWon(true); // Keep this for actual game completion
             return true;
         }
     }

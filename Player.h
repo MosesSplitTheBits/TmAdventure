@@ -19,6 +19,7 @@ private:
     char underChar; 
     Inventory playerInventory; 
     bool won = false;
+    bool waitingAtDoor = false;
 
 public:
     Player(const char* keys, Screen& s, Point start) 
@@ -44,6 +45,9 @@ public:
     
     bool hasWon() const { return won; }
     void setWon(bool w) { won = w; }
+    
+    bool isWaitingAtDoor() const { return waitingAtDoor; }
+    void setWaitingAtDoor(bool waiting) { waitingAtDoor = waiting; }
 };
 
 

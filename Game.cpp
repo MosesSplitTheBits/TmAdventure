@@ -74,10 +74,7 @@ void Game::run()
     while (true)
     {
         int roomId = currentRoom ? currentRoom->getID() : 0;
-        
-        // 1. שליפת כמות הטעויות מהחידות
         int puzzleFails = puzzles.getTotalWrongAttempts();
-
         statusBar.draw(roomId, puzzleFails);
 
         if (_kbhit())
@@ -88,21 +85,22 @@ void Game::run()
                 if (pause()) break;
             }
 
-            if (ch == p1_drop_key || ch == toupper(p1_drop_key)) p1.tryDropKey(*this);
-            if (ch == p2_drop_key || ch == toupper(p2_drop_key)) p2.tryDropKey(*this);
-
-            p1.keyPreesed(ch);
-            p2.keyPreesed(ch);
+            // Only process input for players who aren't waiting at door
+            if (!p1.isWaitingAtDoor()) {
+                if (ch == p1_drop_key || ch == toupper(p1_drop_key)) p1.tryDropKey(*this);
+                p1.keyPreesed(ch);
+            }
+            if (!p2.isWaitingAtDoor()) {
+                if (ch == p2_drop_key || ch == toupper(p2_drop_key)) p2.tryDropKey(*this);
+                p2.keyPreesed(ch);
+            }
         }
 
-        p1.move(*this);
-        p2.move(*this);
-
-        p1.getPosition().draw();
-        p2.getPosition().draw();
+        // Only move and draw players who aren't waiting at door
+        if (!p1.isWaitingAtDoor()) p1.move(*this);
+        if (!p2.isWaitingAtDoor()) p2.move(*this);
 
         if (!handleEvents()) {
-            // If the loop broke because of winning (not quitting via menu)
             if (isGameWon()) {
                 system("cls");
                 // Simple Win Screen
@@ -118,7 +116,6 @@ void Game::run()
             break;
         }
         
-
         Sleep(100);
     }
 }
@@ -137,15 +134,16 @@ bool Game::handlePlayerInteraction(Player& player) {
 }
 
 bool Game::handleEvents() {
-    // 1. Generic Interaction (Polymorphism!)
-    if (!handlePlayerInteraction(p1)) return false;
-    if (!handlePlayerInteraction(p2)) return false;
+    // 1. Generic Interaction (Polymorphism!) - Skip players waiting at door
+    if (!p1.isWaitingAtDoor() && !handlePlayerInteraction(p1)) return false;
+    if (!p2.isWaitingAtDoor() && !handlePlayerInteraction(p2)) return false;
     
     // 2. Global State Updates
     Switch::updateAllSwitches(*this);
     Door::updateProximityDoors(*this);
 
-    if (p1.hasWon() && p2.hasWon()) return false;
+    // Check for game end (only in final room when both actually won)
+    if (currentRoom && currentRoom->getID() == 3 && p1.hasWon() && p2.hasWon()) return false;
     return true;
 }
 
@@ -169,6 +167,9 @@ bool Game::isGameWon() const {
 }
 
 void Game::loadLevel(Room* nextRoom, bool comingBack) {
+    //reset waiting flags
+    p1.setWaitingAtDoor(false);
+    p2.setWaitingAtDoor(false);
     if (currentRoom) {
         savedRoomObjects[currentRoom] = std::move(objects);
     }
