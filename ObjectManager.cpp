@@ -114,3 +114,24 @@ std::vector<Riddle*> Game::getRiddles() {
     }
     return out;
 }
+
+std::vector<Torch*> Game::getTorches() {
+    std::vector<Torch*> out;
+    for (auto& u : objects) {
+        if (!u) continue;
+        if (auto t = dynamic_cast<Torch*>(u.get())) out.push_back(t);
+    }
+    return out;
+}
+
+//for torches
+bool Game::isDarkened() const {
+    auto torches = const_cast<Game*>(this)->getTorches();
+    return !torches.empty() && !torches[0]->isCollected();
+}
+
+int Game::getVisionRadius(int px, int py) const {
+    auto p1_has = const_cast<Player&>(p1).hasTorch();
+    auto p2_has = const_cast<Player&>(p2).hasTorch();
+    return (p1_has || p2_has) ? 10 : 2;
+}

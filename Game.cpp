@@ -115,7 +115,8 @@ void Game::run()
             }
             break;
         }
-        
+
+        refreshVision();
         Sleep(100);
     }
 }
@@ -242,7 +243,8 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
         initObstacles();
         initDoors();
         initRiddles(); 
-        
+        initTorches();
+
         //Invisible HUD wall at bottom
         for (int x = 0; x <= Screen::MAX_X; ++x) {
             addObject(std::make_unique<Wall>(x, 21));
@@ -322,6 +324,47 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
         p2.setPosition(5, 6);
         p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
         p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
+    }
+
+    refreshVision();
+}
+
+//Calc vision radius for dark rooms
+void Game::refreshVision() {
+    bool dark = false;
+    if (currentRoom) {
+        const auto& map = currentRoom->getMapData();
+        for (const auto& row : map) if (row.find('T') != std::string::npos) { dark = true; break; }
+    }
+
+    int r1 = p1.hasTorch() ? 20 : 10;
+    int r2 = p2.hasTorch() ? 20 : 10;
+    auto inVision = [&](int x, int y) {
+        if (!dark) return true;
+        int d1 = std::abs(p1.getPosition().getX() - x) + std::abs(p1.getPosition().getY() - y);
+        int d2 = std::abs(p2.getPosition().getX() - x) + std::abs(p2.getPosition().getY() - y);
+        return d1 <= r1 || d2 <= r2;
+    };
+
+    for (int y = 0; y <= Screen::MAX_Y; ++y) {
+        if (y >= 21) continue;
+        for (int x = 0; x <= Screen::MAX_X; ++x) {
+            if ((x == p1.getPosition().getX() && y == p1.getPosition().getY()) ||
+                (x == p2.getPosition().getX() && y == p2.getPosition().getY())) continue;
+
+            bool vision = inVision(x, y);
+            char ch = dark ? (vision ? ' ' : 'd') : ' ';
+            int color = dark ? (vision ? 7 : 8) : 7;
+
+            if (auto obj = objectAt(x, y)) {
+                char t = obj->typeChar();
+                bool visible = !dark || t == 'W' || t == 'T' || vision;
+                if (visible) { ch = obj->renderChar(); color = obj->renderColor(); }
+            }
+            screen.setCharAt(x, y, ch);
+            screen.setColorAt(x, y, color);
+            screen.drawCell(x, y);
+        }
     }
 }
 

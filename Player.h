@@ -36,7 +36,9 @@ public:
     
     // Inventory
     bool hasKey(int keyId) const;
+    bool hasTorch() const;
     void pickKey(int keyId) { playerInventory = { 'K', keyId }; }
+    void pickTorch() { playerInventory = { 'T', -1 }; }
     int dropKey();
     void useKey(int keyId);
     void tryDropKey(Game& game);

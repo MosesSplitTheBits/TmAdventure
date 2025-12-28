@@ -85,6 +85,8 @@ int Player::dropKey() {
     return -1;
 }
 
+bool Player::hasTorch() const { return playerInventory.type == 'T'; }
+
 void Player::useKey(int keyId) {
     if (hasKey(keyId)) {
         playerInventory.type = ' ';

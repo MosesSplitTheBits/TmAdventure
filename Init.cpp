@@ -5,6 +5,7 @@
 #include "Riddle.h"
 #include "Room.h"
 #include "Screen.h"
+#include "Torch.h"
 #include <memory>
 
 void Game::initSwitches() {
@@ -83,5 +84,18 @@ void Game::initRiddles() {
     auto newRiddles = Riddle::createFromMap(currentRoom->getMapData(), currentRoom->getID());
     for (auto& r : newRiddles) {
         addObject(std::move(r));
+    }
+}
+
+void Game::initTorches() {
+    if (!currentRoom) return;
+    const auto& map = currentRoom->getMapData();
+
+    for (int y = 0; y < (int)map.size(); ++y) {
+        for (int x = 0; x < (int)map[y].size(); ++x) {
+            if (map[y][x] == 'T') {
+                addObject(std::make_unique<Torch>(x, y));
+            }
+        }
     }
 }
