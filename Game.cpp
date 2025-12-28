@@ -261,7 +261,7 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
         Room* prevRoom = lastUsedDoor->getTarget(); // The room we just came from
         
         for (auto d : getDoors()) {
-            if (d && d->getTarget() == prevRoom) {
+            if (d && d->getChar() == '4'){
                 // Found the door that connects back - use its position
                 int nx = std::max(0, std::min(d->getPosition().getX() - 3, Screen::MAX_X));
                 int py = std::min(d->getPosition().getY() + 1, Screen::MAX_Y);
