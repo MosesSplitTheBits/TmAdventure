@@ -30,7 +30,7 @@ namespace LevelData {
     };
 
     const std::vector<std::string> MAP_2 = {
-        //   01234567890123456789012345678901234567890123456789012345678901234567890123456789
+        //01234567890123456789012345678901234567890123456789012345678901234567890123456789
         "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 0
         "W  3  3    W                      W     W                                      W", // 1
         "W  3  3    W                      W     W                                      W", // 2
@@ -59,31 +59,31 @@ namespace LevelData {
     };
 
     const std::vector<std::string> MAP_3 = {
-        //   01234567890123456789012345678901234567890123456789012345678901234567890123456789
-        "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 0
-        "W      3  3                                                                    W", // 1
-        "W      3  3                                                                    W", // 2
-        "W      3  3                    WWWW                                            W", // 3
-        "W      3333                                                                    W", // 4
-        "W                     WWW                                                      W", // 5
-        "W                     W W                                                      W", // 6
-        "W                     WWW               S                                      W", // 7
-        "W                                                                              W", // 8
-        "W                                              WWW                             W", // 9
-        "W                                              W W                             W", // 10
-        "W                                              WWW                             W", // 11
-        "W             ***                                                              W", // 12
-        "W             *?*                                                              W", // 13
-        "W             ***           WWW                                                W", // 14
-        "W                           W W                                                W", // 15
-        "W                           WWW                                                W", // 16
-        "W                                                                              W", // 17
-        "W                                                                              W", // 18
-        "W                                        H                                     W", // 19
-        "W                WWWW                                      4444                W", // 20
-        "W                                                          4444                W", // 21
-        "W                                       WWW                4444                W", // 22
-        "W                                       WWW                4444                W", // 23
-        "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"  // 24
-    };
+    //   01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 0
+    "W      3  3                                                                    W", // 1
+    "W      3  3                                                                    W", // 2
+    "W      3  3                    WWWW                                            W", // 3
+    "W      3333                                                                    W", // 4
+    "W                     WWW                                                      W", // 5
+    "W                     W W                                                      W", // 6
+    "W                     WWW               S                                      W", // 7
+    "W                                                                              W", // 8
+    "W                                              WWW                             W", // 9
+    "W                                              W W                             W", // 10
+    "W                                              WWW                             W", // 11
+    "W             ***                                                              W", // 12
+    "W             *?*                                                              W", // 13
+    "W             ***           WWW                                                W", // 14
+    "W                           W W                                                W", // 15
+    "W                           WWW                                                W", // 16
+    "W                                                          4444                W", // 17
+    "W                                        H                 4444                W", // 18
+    "W                WWWW                                      4444                W", // 19
+    "W                                                          4444                W", // 20
+    "W                                       WWW                                     W", // 21
+    "W                                       WWW                                     W", // 22
+    "W                                                                              W", // 23
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"  // 24
+};
 }

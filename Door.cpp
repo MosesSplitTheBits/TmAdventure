@@ -3,7 +3,9 @@
 #include <windows.h> // בשביל Sleep
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include "Game.h"
+
 
 
 // ...existing code... (המימושים הקיימים של Door)

@@ -21,6 +21,7 @@ private:
     Screen& screen;
     Player& p1;
     Player& p2;
+    Door* lastUsedDoor = nullptr;
     
     // The main list of objects in the current room
     std::vector<std::unique_ptr<GameObject>> objects;
@@ -68,9 +69,11 @@ public:
     Screen& getScreen() { return screen; }
     Player& getp1() { return p1; }
     Player& getp2() { return p2; }
-
+    Door* getLastUsedDoor() { return lastUsedDoor; }
     StatusBar& getStatusBar() { return statusBar; }
 
+    //setter for lastUsedDoor
+    void setLastUsedDoor(Door* door) { lastUsedDoor = door; }
     // Game Logic    
     
     // Generic Interaction Handler

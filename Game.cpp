@@ -242,33 +242,40 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
         initObstacles();
         initDoors();
         initRiddles(); 
+        
+        //Invisible HUD wall at bottom
+        for (int x = 0; x <= Screen::MAX_X; ++x) {
+            addObject(std::make_unique<Wall>(x, 21));
+        }
 
         if (!currentRoom->isVisited()) {
             currentRoom->setVisited(true);
         }
     }
 
-    if (comingBack) {
+     if (comingBack && lastUsedDoor) {
+        // Spawn at the door that connects back to the previous room
         bool doorFound = false;
-        for (int y = 0; y <= Screen::MAX_Y; ++y) {
-            for (int x = 0; x <= Screen::MAX_X; ++x) {
-                if (screen.getCharAt(x, y) == '4') {
-                    int nx = std::max(0, std::min(x - 3, Screen::MAX_X));
-                    int py = std::min(y + 1, Screen::MAX_Y);
-                    p1.setPosition(nx, y);
-                    p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                    p2.setPosition(nx, py);
-                    p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                    doorFound = true;
-                    break;
-                }
+        Room* prevRoom = lastUsedDoor->getTarget(); // The room we just came from
+        
+        for (auto d : getDoors()) {
+            if (d && d->getTarget() == prevRoom) {
+                // Found the door that connects back - use its position
+                int nx = std::max(0, std::min(d->getPosition().getX() - 3, Screen::MAX_X));
+                int py = std::min(d->getPosition().getY() + 1, Screen::MAX_Y);
+                p1.setPosition(nx, d->getPosition().getY());
+                p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
+                p2.setPosition(nx, py);
+                p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
+                doorFound = true;
+                break;
             }
-            if (doorFound) break;
         }
         if (!doorFound) { p1.setPosition(3, 2); p2.setPosition(75, 2); }
     } 
-    else 
+    else if (!comingBack)
     {
+        // Going forward - find '3' door
         statusBar.resetRunTime();
         bool doorFound = false;
         for (int y = 0; y <= Screen::MAX_Y; ++y) {
@@ -288,10 +295,31 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
         }
         if (!doorFound) { p1.setPosition(3, 2); p2.setPosition(75, 2); }
     }
+    else {
+        // Coming back but no door tracked - scan for '4'
+        bool doorFound = false;
+        for (int y = 0; y <= Screen::MAX_Y; ++y) {
+            for (int x = 0; x <= Screen::MAX_X; ++x) {
+                if (screen.getCharAt(x, y) == '4') {
+                    int nx = std::max(0, std::min(x - 3, Screen::MAX_X));
+                    int py = std::min(y + 1, Screen::MAX_Y);
+                    p1.setPosition(nx, y);
+                    p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
+                    p2.setPosition(nx, py);
+                    p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
+                    doorFound = true;
+                    break;
+                }
+            }
+            if (doorFound) break;
+        }
+        if (!doorFound) { p1.setPosition(3, 2); p2.setPosition(75, 2); }
+    }
 
-    if (currentRoom && currentRoom->getID() == 2) {
-        p1.setPosition(4, 5);
-        p2.setPosition(5, 5);
+    //Special spawn case: Room 1 -> Room 2
+    if (currentRoom && currentRoom->getID() == 2 && !comingBack) {
+        p1.setPosition(4, 6);
+        p2.setPosition(5, 6);
         p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
         p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
     }

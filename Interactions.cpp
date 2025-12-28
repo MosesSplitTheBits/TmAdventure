@@ -68,7 +68,7 @@ bool Door::interact(Game& game, Player& player) {
                     // Reset waiting flags before transition
                     p1.setWaitingAtDoor(false);
                     p2.setWaitingAtDoor(false);
-                    
+                    game.setLastUsedDoor(this); //save last used door
                     // Load the next level
                     game.loadLevel(target, doorType == '3');
                     system("cls");
