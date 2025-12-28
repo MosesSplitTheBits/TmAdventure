@@ -87,13 +87,17 @@ void Game::run()
 
             // Only process input for players who aren't waiting at door
             if (!p1.isWaitingAtDoor()) {
-                if (ch == p1_drop_key || ch == toupper(p1_drop_key)) p1.tryDropKey(*this);
+                if (ch == p1_drop_key || ch == toupper(p1_drop_key)) {
+                    p1.tryDropItem(*this);
+                }
                 p1.keyPreesed(ch);
             }
             if (!p2.isWaitingAtDoor()) {
-                if (ch == p2_drop_key || ch == toupper(p2_drop_key)) p2.tryDropKey(*this);
-                p2.keyPreesed(ch);
+                if (ch == p2_drop_key || ch == toupper(p2_drop_key)) {
+                     p2.tryDropItem(*this);
             }
+            p2.keyPreesed(ch);
+}
         }
 
         // Only move and draw players who aren't waiting at door
@@ -339,11 +343,29 @@ void Game::refreshVision() {
 
     int r1 = p1.hasTorch() ? 20 : 10;
     int r2 = p2.hasTorch() ? 20 : 10;
+    //Torch light when on floor
+    std::vector<std::pair<int, int>> floorTorches;
+    if (dark) {
+        for (auto t : getTorches()) {
+            if (t && !t->isCollected()) {
+                floorTorches.push_back({t->getPosition().getX(), t->getPosition().getY()});
+            }
+        }
+
     auto inVision = [&](int x, int y) {
         if (!dark) return true;
+        
+        // Player vision
         int d1 = std::abs(p1.getPosition().getX() - x) + std::abs(p1.getPosition().getY() - y);
         int d2 = std::abs(p2.getPosition().getX() - x) + std::abs(p2.getPosition().getY() - y);
-        return d1 <= r1 || d2 <= r2;
+        if (d1 <= r1 || d2 <= r2) return true;
+        // Floor torches vision
+        for (const auto& torch : floorTorches) {
+            int dt = std::abs(torch.first - x) + std::abs(torch.second - y);
+            if (dt <= 5) return true;
+        }
+        
+        return false;
     };
 
     for (int y = 0; y <= Screen::MAX_Y; ++y) {
@@ -366,6 +388,7 @@ void Game::refreshVision() {
             screen.drawCell(x, y);
         }
     }
+}
 }
 
 

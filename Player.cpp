@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Key.h"
 #include "Direction.h"
+#include "Torch.h"
 #include <iostream>
 #include <cctype>
 #include "utils.h"
@@ -87,6 +88,15 @@ int Player::dropKey() {
 
 bool Player::hasTorch() const { return playerInventory.type == 'T'; }
 
+bool Player::dropTorch(){
+    if (playerInventory.type == 'T') {
+        playerInventory.type = ' ';
+        playerInventory.id = 0;
+        return true;
+    }
+    return false;
+}
+
 void Player::useKey(int keyId) {
     if (hasKey(keyId)) {
         playerInventory.type = ' ';
@@ -99,7 +109,7 @@ bool Player::hasKeyForDoor(int doorKeyId) const {
 }
 
 void Player::tryDropKey(Game& game) {
-    int droppedKeyId = this->dropKey(); // הפונקציה הפנימית הקיימת שלך
+    int droppedKeyId = this->dropKey(); 
     if (droppedKeyId == -1) return;
 
     int dropX = p.getX();
@@ -119,4 +129,29 @@ void Player::tryDropKey(Game& game) {
     std::cout << 'K' << std::flush;
     
     this->draw();
+}
+
+void Player::tryDropTorch(Game& game) {
+    if (!dropTorch()) return;
+
+    int dropX = p.getX();
+    int dropY = p.getY();
+    Direction dir = p.getDir();
+    int tx = dropX - dir.dx();
+    int ty = dropY - dir.dy();
+
+    game.addObject(std::make_unique<Torch>(tx, ty));
+    game.getScreen().setCharAt(tx, ty, '!');
+    gotoxy(tx, ty);
+    std::cout << '!' << std::flush;
+
+    this->draw();
+}
+
+void Player::tryDropItem(Game& game) {
+    if (hasTorch()) {
+        tryDropTorch(game);
+    } else {
+        tryDropKey(game);
+    }
 }

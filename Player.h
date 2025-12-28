@@ -1,6 +1,7 @@
 #pragma once
 #include "Point.h"
 #include "Screen.h"
+
 #include <vector>
 
 // Forward declaration (tells compiler "Game" exists)
@@ -40,8 +41,11 @@ public:
     void pickKey(int keyId) { playerInventory = { 'K', keyId }; }
     void pickTorch() { playerInventory = { 'T', -1 }; }
     int dropKey();
+    bool dropTorch();
     void useKey(int keyId);
     void tryDropKey(Game& game);
+    void tryDropTorch(Game& game);
+    void tryDropItem(Game& game);
     bool hasKeyForDoor(int doorKeyId) const;
     
     
