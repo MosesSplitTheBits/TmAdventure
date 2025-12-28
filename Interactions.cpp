@@ -3,6 +3,7 @@
 #include "Riddle.h"
 #include "Door.h"
 #include "Player.h"
+#include "Bomb.h"
 #include <iostream>
 #include "Screen.h"
 #include "utils.h" // Added for system("cls") if needed
@@ -88,3 +89,15 @@ bool Door::interact(Game& game, Player& player) {
     }
     return true;
 }
+
+bool Bomb::interact(Game& game, Player& player) {
+    if (!isCollected()) {
+        collect();
+        player.pickBomb();
+        game.removeObjectAt(getPosition().getX(), getPosition().getY());
+        game.getScreen().setCharAt(getPosition().getX(), getPosition().getY(), ' ');
+        player.draw();
+    }
+    return true;
+}
+

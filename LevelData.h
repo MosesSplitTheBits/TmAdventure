@@ -42,11 +42,11 @@ namespace LevelData {
         "W          W                      W     W                                      W", // 8
         "W          W                      W     W                                      W", // 9
         "W          W                      W     W                                      W", // 10
-        "W          WWWWWWWWWWWWWWWWWWWWWWWW     WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 11
+        "W          WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 11
         "W                                                                              W", // 12
         "W                                                                       4444   W", // 13
         "W     ***                                                               4444   W", // 14
-        "W     *?*                                                               4444   W", // 15
+        "W     *?*                      B                                        4444   W", // 15
         "W     ***                                                               4444   W", // 16
         "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW    WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 17
         "W                                 W     W                                      W", // 18

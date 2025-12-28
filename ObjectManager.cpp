@@ -124,6 +124,15 @@ std::vector<Torch*> Game::getTorches() {
     return out;
 }
 
+std::vector<Bomb*> Game::getBombs() {
+    std::vector<Bomb*> out;
+    for (auto& u : objects) {
+        if (!u) continue;
+        if (auto b = dynamic_cast<Bomb*>(u.get())) out.push_back(b);
+    }
+    return out;
+}
+
 //for torches
 bool Game::isDarkened() const {
     auto torches = const_cast<Game*>(this)->getTorches();

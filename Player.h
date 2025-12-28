@@ -38,14 +38,18 @@ public:
     // Inventory
     bool hasKey(int keyId) const;
     bool hasTorch() const;
+    bool hasBomb() const;
     void pickKey(int keyId) { playerInventory = { 'K', keyId }; }
     void pickTorch() { playerInventory = { 'T', -1 }; }
+    void pickBomb() { playerInventory = { '0', -1 }; }
     int dropKey();
     bool dropTorch();
+    bool dropBomb();
     void useKey(int keyId);
     void tryDropKey(Game& game);
     void tryDropTorch(Game& game);
     void tryDropItem(Game& game);
+    void tryDropBomb(Game& game);
     bool hasKeyForDoor(int doorKeyId) const;
     
     

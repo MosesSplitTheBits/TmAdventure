@@ -8,7 +8,6 @@
 
 
 
-// ...existing code... (המימושים הקיימים של Door)
 
 void Door::makeDoorHollow(int id, const std::vector<Door*>& doors, Screen& screen) {
     std::vector<std::pair<int,int>> positions;

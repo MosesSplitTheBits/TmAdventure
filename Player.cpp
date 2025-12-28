@@ -3,6 +3,7 @@
 #include "Key.h"
 #include "Direction.h"
 #include "Torch.h"
+#include "Bomb.h"
 #include <iostream>
 #include <cctype>
 #include "utils.h"
@@ -108,6 +109,36 @@ bool Player::hasKeyForDoor(int doorKeyId) const {
     return hasKey(doorKeyId);
 }
 
+bool Player::hasBomb() const { return playerInventory.type == '0'; }
+
+bool Player::dropBomb() {
+    if (playerInventory.type == '0') {
+        playerInventory.type = ' ';
+        playerInventory.id = 0;
+        return true;
+    }
+    return false;
+}
+
+void Player::tryDropBomb(Game& game) {
+    if (!dropBomb()) return;
+
+    int dropX = p.getX();
+    int dropY = p.getY();
+    Direction dir = p.getDir();
+    int bx = dropX - dir.dx();
+    int by = dropY - dir.dy();
+
+    auto bomb = std::make_unique<Bomb>(bx, by);
+    bomb->plant(5); // Start the 5-tick countdown
+    game.addObject(std::move(bomb));
+    game.getScreen().setCharAt(bx, by, '0');
+    gotoxy(bx, by);
+    std::cout << '0' << std::flush;
+
+    this->draw();
+}
+
 void Player::tryDropKey(Game& game) {
     int droppedKeyId = this->dropKey(); 
     if (droppedKeyId == -1) return;
@@ -148,8 +179,11 @@ void Player::tryDropTorch(Game& game) {
     this->draw();
 }
 
+
 void Player::tryDropItem(Game& game) {
-    if (hasTorch()) {
+    if (hasBomb()) {
+        tryDropBomb(game);
+    } else if (hasTorch()) {
         tryDropTorch(game);
     } else {
         tryDropKey(game);

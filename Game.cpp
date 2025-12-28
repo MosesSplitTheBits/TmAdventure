@@ -104,6 +104,8 @@ void Game::run()
         if (!p1.isWaitingAtDoor()) p1.move(*this);
         if (!p2.isWaitingAtDoor()) p2.move(*this);
 
+        handleBombExplosions();
+
         if (!handleEvents()) {
             if (isGameWon()) {
                 system("cls");
@@ -165,6 +167,55 @@ bool Game::pause() {
     p1.draw();
     p2.draw();
     return false;
+}
+// BOMB HANDLERING
+void Game::handleBombExplosions() {
+    auto bombs = getBombs();
+    
+    for (auto bomb : bombs) {
+        if (!bomb || bomb->isCollected()) continue;
+        
+        // Tick planted bombs
+        if (bomb->isPlanted()) {
+            bomb->tick();
+            
+            if (bomb->hasExploded()) {
+                int bx = bomb->getPosition().getX();
+                int by = bomb->getPosition().getY();
+                
+                // Destroy everything in radius 3
+                for (int y = 0; y <= Screen::MAX_Y; ++y) {
+                    if (y >= 21) continue; // Preserve HUD
+                    for (int x = 0; x <= Screen::MAX_X; ++x) {
+                        int dist = std::abs(x - bx) + std::abs(y - by);
+                        if (dist <= 3) {
+                            GameObject* obj = objectAt(x, y);
+                            if (obj && obj->typeChar() != 'B') { // Don't remove bomb itself yet
+                                removeObjectAt(x, y);
+                            }
+                            
+                            screen.setCharAt(x, y, ' ');
+                            screen.setColorAt(x, y, 7);
+                            screen.drawCell(x, y);
+                            
+                            // Kill players in range
+                            if (p1.getPosition().getX() == x && p1.getPosition().getY() == y) {
+                                p1.setPosition(3, 2);
+                                p1.draw();
+                            }
+                            if (p2.getPosition().getX() == x && p2.getPosition().getY() == y) {
+                                p2.setPosition(75, 2);
+                                p2.draw();
+                            }
+                        }
+                    }
+                }
+                
+                // Now remove the bomb
+                removeObjectAt(bx, by);
+            }
+        }
+    }
 }
 
 bool Game::isGameWon() const {
@@ -248,6 +299,7 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
         initDoors();
         initRiddles(); 
         initTorches();
+        initBombs();
 
         //Invisible HUD wall at bottom
         for (int x = 0; x <= Screen::MAX_X; ++x) {

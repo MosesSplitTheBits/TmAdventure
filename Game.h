@@ -16,6 +16,7 @@
 #include "Riddle.h" 
 #include "StatusBar.h"
 #include "Torch.h"
+#include "Bomb.h"
 
 class Game {
 private:
@@ -58,6 +59,7 @@ public:
     void initDoors();
     void initRiddles();
     void initTorches();
+    void initBombs();
 
     // Helpers
     std::vector<Door*> getDoors();
@@ -66,6 +68,7 @@ public:
     std::vector<Obstacle*> getObstacles();
     std::vector<Riddle*> getRiddles(); 
     std::vector<Torch*> getTorches();
+    std::vector<Bomb*> getBombs();
 
     // Getters for Interactions
     PuzzleManager& getPuzzles() { return puzzles; }
@@ -82,11 +85,13 @@ public:
     // Generic Interaction Handler
     bool handlePlayerInteraction(Player& player);
     void checkKeyPickup(Player& player); 
+    void handleBombExplosions();
 
     //For Torches
     bool isDarkened() const;
     int getVisionRadius(int px, int py) const;
     void refreshVision();
+
 };
 
 // --- IMPORTANT: This must be OUTSIDE the class ---

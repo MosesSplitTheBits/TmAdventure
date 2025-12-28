@@ -6,6 +6,7 @@
 #include "Room.h"
 #include "Screen.h"
 #include "Torch.h"
+#include "Bomb.h"
 #include <memory>
 
 void Game::initSwitches() {
@@ -95,6 +96,19 @@ void Game::initTorches() {
         for (int x = 0; x < (int)map[y].size(); ++x) {
             if (map[y][x] == 'T') {
                 addObject(std::make_unique<Torch>(x, y));
+            }
+        }
+    }
+}
+
+void Game::initBombs() {
+    if (!currentRoom) return;
+    const auto& map = currentRoom->getMapData();
+
+    for (int y = 0; y < (int)map.size(); ++y) {
+        for (int x = 0; x < (int)map[y].size(); ++x) {
+            if (map[y][x] == 'B') {
+                addObject(std::make_unique<Bomb>(x, y));
             }
         }
     }
