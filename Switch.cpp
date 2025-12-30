@@ -70,21 +70,4 @@ void Switch::updateAllSwitches(Game& game) {
             if (p2.getPosition().getX() == ox && p2.getPosition().getY() == oy) p2.draw();
         }
     }
-
-    // 3. עדכון דלתות
-    for (auto d : game.getDoors()) {
-        if (d && d->isSwitchControlled()) {
-            int id = d->getId();
-            bool shouldOpen = false;
-
-            for (auto s : allSwitches) {
-                if (s && s->getId() == id && s->isOn()) {
-                    shouldOpen = true;
-                    break;
-                }
-            }
-            if (shouldOpen) d->openDoor();
-            else d->closeDoor();
-        }
-    }
 }

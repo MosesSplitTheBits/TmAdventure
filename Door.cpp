@@ -9,7 +9,8 @@
 
 
 
-void Door::makeDoorHollow(int id, const std::vector<Door*>& doors, Screen& screen) {
+void Door::makeDoorHollow(int id, const std::vector<Door*>& doors, Screen& screen) 
+{
     std::vector<std::pair<int,int>> positions;
     for (auto d : doors) {
         // Only process '4' doors
@@ -50,7 +51,8 @@ void Door::makeDoorHollow(int id, const std::vector<Door*>& doors, Screen& scree
     }
 }
 
-void Door::animateOpening(int id, const std::vector<Door*>& doors, Screen& screen) {
+void Door::animateOpening(int id, const std::vector<Door*>& doors, Screen& screen) 
+{
     std::vector<std::pair<int,int>> positions;
     for (auto d : doors) {
         // Only animate '4' doors
@@ -128,13 +130,15 @@ void Door::animateOpening(int id, const std::vector<Door*>& doors, Screen& scree
 }
 
 // פונקציית עזר קטנה לחישוב מרחק (אפשר לשים אותה ב-utils.h בעתיד)
-bool isNear(const Point& a, const Point& b) {
+bool isNear(const Point& a, const Point& b) 
+{
     int dx = a.getX() - b.getX();
     int dy = a.getY() - b.getY();
     return (dx * dx + dy * dy) <= 4;
 }
 
-void Door::updateProximityDoors(Game& game) {
+void Door::updateProximityDoors(Game& game) 
+{
     auto doors = game.getDoors();
     auto& p1 = game.getp1();
     auto& p2 = game.getp2();
@@ -169,4 +173,45 @@ void Door::updateProximityDoors(Game& game) {
         // הפעלת האנימציה
         Door::animateOpening(id, doors, screen);
     }
+}
+
+bool Door::interact(Game& game, Player& player) 
+{
+    if (!isPassable()) {
+        return true;
+    }
+
+    const char doorType = getChar();
+    Room* const target = getTarget();
+
+    // Victory door: open '4' with no target
+    if (doorType == '4' && target == nullptr) {
+        player.setWon(true);
+        return true;
+    }
+
+    // Transition doors: '3' or '4' with a target room
+    if ((doorType == '3' || doorType == '4') && target != nullptr) {
+        Player& p1 = game.getp1();
+        Player& p2 = game.getp2();
+
+        // Mark this player as waiting (once)
+        if (!player.isWaitingAtDoor()) {
+            player.setWaitingAtDoor(true);
+            player.getPosition().erase();
+        }
+
+        // Transition only when both players are waiting
+        if (p1.isWaitingAtDoor() && p2.isWaitingAtDoor()) {
+            p1.setWaitingAtDoor(false);
+            p2.setWaitingAtDoor(false);
+
+            game.setLastUsedDoor(this);
+            game.loadLevel(target, doorType == '3');
+        }
+
+        return true;
+    }
+
+    return true;
 }

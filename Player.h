@@ -7,6 +7,16 @@
 // Forward declaration (tells compiler "Game" exists)
 class Game; 
 
+
+struct SpringLaunchState 
+{
+    bool active = false;
+    int speeed = 0;
+    int remainingCycles = 0;
+    Direction direction = Direction::directions[Direction::STAY]; 
+};
+
+    
 struct Inventory {
     char type = ' '; 
     int id = 0;      
@@ -23,6 +33,9 @@ private:
     bool waitingAtDoor = false;
 
 public:
+    SpringLaunchState springState;
+    int compressedSprings = 0;
+
     Player(const char* keys, Screen& s, Point start) 
         : Keys(keys), screen(s), p(start), underChar(' '), won(false) {}
 

@@ -45,3 +45,13 @@ void Screen::draw() const
     setTextColor(7); // החזרת צבע לבן
 }
 
+int Screen::getColorAt(int x, int y) const 
+{
+    if (x >= 0 && x <= MAX_X && y >= 0 && y <= MAX_Y) 
+    {
+        return colors[y][x];
+    }
+    return 7; // Default white if out of bounds
+}
+
+

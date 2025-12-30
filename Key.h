@@ -12,6 +12,6 @@ public:
     char renderChar() const override { return collected ? ' ' : 'K'; }
     int renderColor() const override { return collected ? 2 : 14; }
     bool isPassable() const override { return true; } // keys don't block
-    virtual char typeChar() const override { return 'K'; }
-    virtual bool interact(Game& game, Player& player) override;
+    char typeChar() const override { return 'K'; }
+    bool interact(Game& game, Player& player) override;
 };

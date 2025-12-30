@@ -30,6 +30,8 @@ public:
         return board[y][x];
     }
 
+    int getColorAt(int x, int y) const;
+
     void setCharAt(int x, int y, char c) {
         if (x >= 0 && x <= MAX_X && y >= 0 && y <= MAX_Y) {
             board[y][x] = c;
@@ -50,6 +52,8 @@ public:
         std::cout << board[y][x];
         setTextColor(7); // החזרת צבע לבן
     }
+
+    
 
     
 

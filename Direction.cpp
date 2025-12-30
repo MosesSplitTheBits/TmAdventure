@@ -8,3 +8,4 @@ const Direction Direction::directions[] ={
     {1, 0},   // RIGHT
     {0, 0}    // STAY
 };
+

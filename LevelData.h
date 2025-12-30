@@ -22,7 +22,7 @@ namespace LevelData {
 		"W                           W     ***   W                                      W",  // 13
 		"W                           W           W                                      W",  // 14
 		"W                           W           W                                      W",  // 15
-		"W                           W                                  4444            W",  // 16
+		"W####                       W                                  4444            W",  // 16
 		"W               T           W                                  4444            W",  // 17
 		"W                           W                                  4444            W",  // 18
 		"W                           W           W                      4444            W",  // 19

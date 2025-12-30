@@ -17,6 +17,7 @@
 #include "StatusBar.h"
 #include "Torch.h"
 #include "Bomb.h"
+#include "Spring.h" 
 
 class Game {
 private:
@@ -46,20 +47,15 @@ public:
     bool pause();
     bool isGameWon() const;
     void loadLevel(Room* nextRoom, bool comingBack = false);
+    void spawnPlayers(bool comingBack);
+    
+
 
     // Object Management
     void addObject(std::unique_ptr<GameObject> obj);
     void removeObjectAt(int x, int y);
     GameObject* objectAt(int x, int y);
     void rebuildObjectGrid();
-
-    // Initialization (Implemented in Init.cpp)
-    void initSwitches();
-    void initObstacles();
-    void initDoors();
-    void initRiddles();
-    void initTorches();
-    void initBombs();
 
     // Helpers
     std::vector<Door*> getDoors();
@@ -69,6 +65,7 @@ public:
     std::vector<Riddle*> getRiddles(); 
     std::vector<Torch*> getTorches();
     std::vector<Bomb*> getBombs();
+    std::vector<Spring*> getSprings();
 
     // Getters for Interactions
     PuzzleManager& getPuzzles() { return puzzles; }
@@ -77,6 +74,7 @@ public:
     Player& getp2() { return p2; }
     Door* getLastUsedDoor() { return lastUsedDoor; }
     StatusBar& getStatusBar() { return statusBar; }
+    Room* getCurrentRoom() const { return currentRoom; }
 
     //setter for lastUsedDoor
     void setLastUsedDoor(Door* door) { lastUsedDoor = door; }

@@ -24,6 +24,8 @@
 #include "GameObject.h"
 #include "Puzzle.h"
 #include "Riddle.h" 
+#include "ObjectFactory.h"
+#include "Bomb.h"
 
 Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom)
     : screen(s), p1(p1_ref), p2(p2_ref), currentRoom(nullptr)
@@ -104,8 +106,6 @@ void Game::run()
         if (!p1.isWaitingAtDoor()) p1.move(*this);
         if (!p2.isWaitingAtDoor()) p2.move(*this);
 
-        handleBombExplosions();
-
         if (!handleEvents()) {
             if (isGameWon()) {
                 system("cls");
@@ -148,6 +148,7 @@ bool Game::handleEvents() {
     // 2. Global State Updates
     Switch::updateAllSwitches(*this);
     Door::updateProximityDoors(*this);
+    Bomb::handleBombExplosions(*this);
 
     // Check for game end (only in final room when both actually won)
     if (currentRoom && currentRoom->getID() == 3 && p1.hasWon() && p2.hasWon()) return false;
@@ -168,140 +169,48 @@ bool Game::pause() {
     p2.draw();
     return false;
 }
-// BOMB HANDLERING
-void Game::handleBombExplosions() {
-    auto bombs = getBombs();
-    
-    for (auto bomb : bombs) {
-        if (!bomb || bomb->isCollected()) continue;
-        
-        // Tick planted bombs
-        if (bomb->isPlanted()) {
-            bomb->tick();
-            
-            if (bomb->hasExploded()) {
-                int bx = bomb->getPosition().getX();
-                int by = bomb->getPosition().getY();
-                
-                // Destroy everything in radius 3
-                for (int y = 0; y <= Screen::MAX_Y; ++y) {
-                    if (y >= 21) continue; // Preserve HUD
-                    for (int x = 0; x <= Screen::MAX_X; ++x) {
-                        int dist = std::abs(x - bx) + std::abs(y - by);
-                        if (dist <= 3) {
-                            GameObject* obj = objectAt(x, y);
-                            if (obj && obj->typeChar() != 'B') { // Don't remove bomb itself yet
-                                removeObjectAt(x, y);
-                            }
-                            
-                            screen.setCharAt(x, y, ' ');
-                            screen.setColorAt(x, y, 7);
-                            screen.drawCell(x, y);
-                            
-                            // Kill players in range
-                            if (p1.getPosition().getX() == x && p1.getPosition().getY() == y) {
-                                p1.setPosition(3, 2);
-                                p1.draw();
-                            }
-                            if (p2.getPosition().getX() == x && p2.getPosition().getY() == y) {
-                                p2.setPosition(75, 2);
-                                p2.draw();
-                            }
-                        }
-                    }
-                }
-                
-                // Now remove the bomb
-                removeObjectAt(bx, by);
-            }
-        }
-    }
-}
 
 bool Game::isGameWon() const {
     return p1.hasWon() && p2.hasWon();
 }
 
 void Game::loadLevel(Room* nextRoom, bool comingBack) {
-    //reset waiting flags
-    p1.setWaitingAtDoor(false);
-    p2.setWaitingAtDoor(false);
+    // 1. Save current room state before leaving
     if (currentRoom) {
         savedRoomObjects[currentRoom] = std::move(objects);
     }
     
+    // 2. Switch Room
     currentRoom = nextRoom;
+    p1.setWaitingAtDoor(false);
+    p2.setWaitingAtDoor(false);
+    
+    // 3. Load Map Background (Walls and Floor)
     const auto& mapData = currentRoom->getMapData();
     screen.loadMap(mapData); 
     
+    // 4. Load Objects (Either restore from save or create new)
     auto it = savedRoomObjects.find(nextRoom);
     if (it != savedRoomObjects.end()) {
+        // RESTORE: Move objects back from storage
         objects = std::move(it->second); 
-        savedRoomObjects.erase(it);      
-        rebuildObjectGrid();             
-
-        // --- SYNC VISUALS ---
-        for (int y = 0; y < (int)mapData.size(); ++y) {
-            for (int x = 0; x < (int)mapData[y].size(); ++x) {
-                char c = mapData[y][x];
-                
-                if (c == 'K' || c == '?' || c == '4' || c == '3' || c == '*' || c == '+') {
-                    GameObject* obj = objectAt(x, y);
-                    
-                    if (!obj) {
-                        if (c == 'K' || c == '?') screen.setCharAt(x, y, ' ');
-                    } else {
-                        if (auto d = dynamic_cast<Door*>(obj)) {
-                            screen.setCharAt(x, y, d->renderChar());
-                            screen.setColorAt(x, y, d->renderColor());
-                        }
-                        else if (auto obs = dynamic_cast<Obstacle*>(obj)) {
-                            if (obs->isOpen()) screen.setCharAt(x, y, ' ');
-                            else screen.setCharAt(x, y, c);
-                        }
-                        else if (auto r = dynamic_cast<Riddle*>(obj)) {
-                            screen.setCharAt(x, y, r->typeChar());
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- FIX: Re-apply "Hollow" effect for open doors ---
-        // This ensures the door looks like a frame (4  4) instead of a block (4444)
-        std::set<int> processedDoorIds;
-        for (auto d : getDoors()) {
-            if (d && d->isOpen() && d->getChar() == '4') {
-                int id = d->getId();
-                // Only process each door ID once
-                if (processedDoorIds.find(id) == processedDoorIds.end()) {
-                    Door::makeDoorHollow(id, getDoors(), screen);
-                    processedDoorIds.insert(id);
-                }
-            }
-        }
+        // Do NOT erase from map, so we can save it again later
     } else {
+        // NEW: Create objects from scratch using Factory
         objects.clear();
-        objectGrid.clear();
+        objectGrid.clear(); // Clear the lookup grid
         
         for (int y = 0; y < (int)mapData.size(); ++y) {
             for (int x = 0; x < (int)mapData[y].size(); ++x) {
-                if (mapData[y][x] == 'W') {
-                    addObject(std::make_unique<Wall>(x, y));
+                char tile = mapData[y][x];
+                // Factory handles Doors, Enemies, Keys, etc.
+                if (auto obj = ObjectFactory::createFromTile(*this, x, y, tile)) {
+                    addObject(std::move(obj));
                 }
             }
         }
-        rebuildObjectGrid();
-
-        // These functions are now in Init.cpp!
-        initSwitches();
-        initObstacles();
-        initDoors();
-        initRiddles(); 
-        initTorches();
-        initBombs();
-
-        //Invisible HUD wall at bottom
+        
+        // Add invisible HUD wall
         for (int x = 0; x <= Screen::MAX_X; ++x) {
             addObject(std::make_unique<Wall>(x, 21));
         }
@@ -311,91 +220,92 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
         }
     }
 
-     if (comingBack && lastUsedDoor) {
-        // Spawn at the door that connects back to the previous room
-        bool doorFound = false;
-        Room* prevRoom = lastUsedDoor->getTarget(); // The room we just came from
-        
+    // 5. Rebuild Grid & Render Objects (The "Heritage" Way)
+    rebuildObjectGrid();             
+
+    // Iterate ALL objects and let them draw themselves. 
+    // No more manual checks for "is this a door?" or "is this a key?"
+    for (const auto& obj : objects) {
+        // Polymorphism: renderChar() and renderColor() are virtual!
+        screen.setCharAt(obj->getPosition().getX(), obj->getPosition().getY(), obj->renderChar());
+        screen.setColorAt(obj->getPosition().getX(), obj->getPosition().getY(), obj->renderColor());
+    }
+
+    // 6. Handle specific visual updates (like hollow doors)
+    // This is cleaner than doing it inside the render loop
+    Door::updateProximityDoors(*this);
+
+    // 7. Position Players
+    spawnPlayers(comingBack);
+
+    // 8. Final Vision Update
+    refreshVision();
+}
+
+void Game::spawnPlayers(bool comingBack) {
+    // Default fallback position
+    int p1x = 4, p1y = 6;
+    int p2x = 5, p2y = 6;
+    bool foundSpawn = false;
+
+
+    // Case 2: Coming Back (Find the door we just exited from)
+    if (comingBack && lastUsedDoor) {
+        // We look for a door that leads to the room we just came from
+        // But simpler: look for the '4' (Exit) door in this room
         for (auto d : getDoors()) {
-            if (d && d->getChar() == '4'){
-                // Found the door that connects back - use its position
-                int nx = std::max(0, std::min(d->getPosition().getX() - 3, Screen::MAX_X));
-                int py = std::min(d->getPosition().getY() + 1, Screen::MAX_Y);
-                p1.setPosition(nx, d->getPosition().getY());
-                p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                p2.setPosition(nx, py);
-                p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                doorFound = true;
+            if (d && d->getChar() == '4') {
+                // Spawn near the exit door
+                p1x = std::max(1, d->getPosition().getX() - 3);
+                p1y = d->getPosition().getY();
+                p2x = p1x;
+                p2y = std::min(d->getPosition().getY() + 1, Screen::MAX_Y);
+                foundSpawn = true;
                 break;
             }
         }
-        if (!doorFound) { p1.setPosition(3, 2); p2.setPosition(75, 2); }
-    } 
-    else if (!comingBack)
-    {
-        // Going forward - find '3' door
-        statusBar.resetRunTime();
-        bool doorFound = false;
-        for (int y = 0; y <= Screen::MAX_Y; ++y) {
-            for (int x = 0; x <= Screen::MAX_X; ++x) {
-                if (screen.getCharAt(x, y) == '3') {
-                    int nx = std::max(0, std::min(x - 4, Screen::MAX_X));
-                    int py = std::min(y + 1, Screen::MAX_Y);
-                    p1.setPosition(nx, y);
-                    p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                    p2.setPosition(nx, py);
-                    p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                    doorFound = true;
-                    break;
-                }
-            }
-            if (doorFound) break;
-        }
-        if (!doorFound) { p1.setPosition(3, 2); p2.setPosition(75, 2); }
     }
+    // Case 3: Going Forward (Find the '3' Entrance)
     else {
-        // Coming back but no door tracked - scan for '4'
-        bool doorFound = false;
-        for (int y = 0; y <= Screen::MAX_Y; ++y) {
-            for (int x = 0; x <= Screen::MAX_X; ++x) {
-                if (screen.getCharAt(x, y) == '4') {
-                    int nx = std::max(0, std::min(x - 3, Screen::MAX_X));
-                    int py = std::min(y + 1, Screen::MAX_Y);
-                    p1.setPosition(nx, y);
-                    p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                    p2.setPosition(nx, py);
-                    p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-                    doorFound = true;
+        // Scan map for '3'
+        const auto& map = currentRoom->getMapData();
+        for (int y = 0; y < map.size() && !foundSpawn; ++y) {
+            for (int x = 0; x < map[y].size(); ++x) {
+                if (map[y][x] == '3') {
+                    p1x = std::max(1, x - 4);
+                    p1y = y;
+                    p2x = p1x;
+                    p2y = std::min(y + 1, Screen::MAX_Y);
+                    foundSpawn = true;
                     break;
                 }
             }
-            if (doorFound) break;
         }
-        if (!doorFound) { p1.setPosition(3, 2); p2.setPosition(75, 2); }
     }
 
-    //Special spawn case: Room 1 -> Room 2
-    if (currentRoom && currentRoom->getID() == 2 && !comingBack) {
-        p1.setPosition(4, 6);
-        p2.setPosition(5, 6);
-        p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-        p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
-    }
-
-    refreshVision();
+    // Apply positions
+    p1.setPosition(p1x, p1y);
+    p2.setPosition(p2x, p2y);
+    
+    // Reset directions
+    p1.getPosition().changeDirection(Direction::directions[Direction::STAY]);
+    p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
 }
+
 
 //Calc vision radius for dark rooms
 void Game::refreshVision() {
     bool dark = false;
     if (currentRoom) {
         const auto& map = currentRoom->getMapData();
-        for (const auto& row : map) if (row.find('T') != std::string::npos) { dark = true; break; }
+        for (const auto& row : map) {
+            if (row.find('T') != std::string::npos) { dark = true; break; }
+        }
     }
 
     int r1 = p1.hasTorch() ? 20 : 10;
     int r2 = p2.hasTorch() ? 20 : 10;
-    //Torch light when on floor
+
     std::vector<std::pair<int, int>> floorTorches;
     if (dark) {
         for (auto t : getTorches()) {
@@ -403,45 +313,49 @@ void Game::refreshVision() {
                 floorTorches.push_back({t->getPosition().getX(), t->getPosition().getY()});
             }
         }
+    }
 
     auto inVision = [&](int x, int y) {
         if (!dark) return true;
-        
-        // Player vision
+
         int d1 = std::abs(p1.getPosition().getX() - x) + std::abs(p1.getPosition().getY() - y);
         int d2 = std::abs(p2.getPosition().getX() - x) + std::abs(p2.getPosition().getY() - y);
         if (d1 <= r1 || d2 <= r2) return true;
-        // Floor torches vision
+
         for (const auto& torch : floorTorches) {
             int dt = std::abs(torch.first - x) + std::abs(torch.second - y);
             if (dt <= 5) return true;
         }
-        
         return false;
     };
 
     for (int y = 0; y <= Screen::MAX_Y; ++y) {
         if (y >= 21) continue;
+
         for (int x = 0; x <= Screen::MAX_X; ++x) {
+            // אל תכסה את השחקנים כאן (הם מצוירים בנפרד או בפונקציה שלהם)
             if ((x == p1.getPosition().getX() && y == p1.getPosition().getY()) ||
-                (x == p2.getPosition().getX() && y == p2.getPosition().getY())) continue;
+                (x == p2.getPosition().getX() && y == p2.getPosition().getY()))
+                continue;
 
             bool vision = inVision(x, y);
-            char ch = dark ? (vision ? ' ' : 'd') : ' ';
-            int color = dark ? (vision ? 7 : 8) : 7;
+
+            char ch = (!dark) ? screen.getCharAt(x, y) : (vision ? ' ' : 'd');
+            int color = (!dark) ? screen.getColorAt(x, y) : (vision ? 7 : 8);
 
             if (auto obj = objectAt(x, y)) {
-                char t = obj->typeChar();
-                bool visible = !dark || t == 'W' || t == 'T' || vision;
+                bool visible = !dark || obj->typeChar() == 'W' || obj->typeChar() == 'T' || vision;
                 if (visible) { ch = obj->renderChar(); color = obj->renderColor(); }
             }
+
             screen.setCharAt(x, y, ch);
             screen.setColorAt(x, y, color);
             screen.drawCell(x, y);
         }
     }
 }
-}
+
+
 
 
 

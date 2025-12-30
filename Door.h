@@ -6,31 +6,31 @@
 class Door : public GameObject {
 private:
     Room* targetRoom = nullptr;
-    bool isOpenState;
-    bool switchControlled;
-
+    bool isLocked;
 public:
-    Door(int x, int y, int id, char type, Room* target, bool isSwitch = false)
-        : GameObject(x, y, type, id), targetRoom(target), isOpenState(false), switchControlled(isSwitch) {}
+    Door(int x, int y, int id, char type, Room* target, bool locked = true)
+        : GameObject(x, y, type, id), targetRoom(target), isLocked(locked) {}
 
-    virtual char typeChar() const override { return getChar(); }
 
-    void openDoor() { isOpenState = true; }
-    void closeDoor() { isOpenState = false; }
-    bool isOpen() const { return isOpenState; }
+    // Implement pure virtual
+    char typeChar() const override { return getChar(); }
+    bool isPassable() const override { return !isLocked; }
+    char renderChar() const override { return getChar(); }
+    int renderColor() const override { return isLocked ? 4 : 2; } // Red if locked, Green if unlocked
+    bool interact(Game& game, Player& player) override;
+
+
+    // Door state management
+    void openDoor() { isLocked = false; }
+    void closeDoor() { isLocked = true; }
+    bool isOpen() const { return !isLocked; }
     
-    // Passable if open OR if it's a back door ('3')
-    virtual bool isPassable() const override { return isOpenState; }
     
-    // --- FIX IS HERE ---
-    virtual char renderChar() const override { return getChar(); }
 
-    virtual int renderColor() const override { return isOpenState ? 2 : 4; } // Green if open, Red if closed
 
     Room* getTarget() const { return targetRoom; }
-    bool isSwitchControlled() const { return switchControlled; }
+    void setTarget(Room* r) { targetRoom = r; }
 
-    virtual bool interact(Game& game, Player& player) override;
 
      // פונקציה חדשה לניהול פתיחה בקרבה
     static void updateProximityDoors(Game& game);

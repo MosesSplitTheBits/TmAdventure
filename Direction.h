@@ -18,4 +18,6 @@ public:
         STAY, NUM_DIRECTIONS    
     };
     static const Direction directions[NUM_DIRECTIONS];
+    int getX() { return dirx; }
+    int getY() { return diry; }
 };

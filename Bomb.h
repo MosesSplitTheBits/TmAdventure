@@ -32,7 +32,8 @@ public:
         return collected ? 2 : 8; // Dark gray when collected
     }
     bool isPassable() const override { return isPlanted(); } // bombs block only when not planted
-    virtual char typeChar() const override { return 'B'; }
-    virtual bool interact(Game& game, Player& player) override;
+    char typeChar() const override { return 'B'; }
+    bool interact(Game& game, Player& player) override;
+    static void handleBombExplosions(Game& game);
 
 };

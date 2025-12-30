@@ -6,6 +6,7 @@
 #include "Obstacle.h"
 #include "Riddle.h"
 #include "Screen.h"
+#include "Spring.h" // Ensure this is included
 #include <algorithm>
 #include <vector>
 #include <memory>
@@ -143,4 +144,15 @@ int Game::getVisionRadius(int px, int py) const {
     auto p1_has = const_cast<Player&>(p1).hasTorch();
     auto p2_has = const_cast<Player&>(p2).hasTorch();
     return (p1_has || p2_has) ? 10 : 2;
+}
+
+std::vector<Spring*> Game::getSprings() {
+    std::vector<Spring*> springs;
+    for (auto& obj : objects) {
+        // Check if the object is actually a Spring
+        if (auto s = dynamic_cast<Spring*>(obj.get())) {
+            springs.push_back(s);
+        }
+    }
+    return springs;
 }
