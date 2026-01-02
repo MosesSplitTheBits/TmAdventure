@@ -4,16 +4,19 @@
 #include "Obstacle.h"
 #include "Door.h"
 #include "Screen.h"
+#include "PushableBlock.h"
 #include <iostream>
 
-// ...existing code...
 
 std::vector<std::unique_ptr<Switch>> Switch::createFromMap(const std::vector<std::string>& mapData, int roomId) {
     std::vector<std::unique_ptr<Switch>> switches;
     for (int y = 0; y < (int)mapData.size(); ++y) {
         for (int x = 0; x < (int)mapData[y].size(); ++x) {
             if (mapData[y][x] == 'S') {
-                switches.push_back(std::make_unique<Switch>(x, y, roomId));
+                switches.push_back(std::make_unique<Switch>(x, y, roomId, false));
+            }
+            else if (mapData[y][x] == 'P') {
+                switches.push_back(std::make_unique<Switch>(x, y, roomId, true));
             }
         }
     }
@@ -25,6 +28,7 @@ void Switch::updateAllSwitches(Game& game) {
     auto& p1 = game.getp1(); // נניח שיש גטרים כאלו ב-Game
     auto& p2 = game.getp2();
     auto& screen = game.getScreen();
+    auto pushableBlocks = game.getPushableBlocks();
 
     // 1. עדכון מצב המתגים
     for (auto s : allSwitches) {
@@ -32,14 +36,34 @@ void Switch::updateAllSwitches(Game& game) {
         int sx = s->getPosition().getX();
         int sy = s->getPosition().getY();
 
-        bool p1On = (p1.getPosition().getX() == sx && p1.getPosition().getY() == sy);
-        bool p2On = (p2.getPosition().getX() == sx && p2.getPosition().getY() == sy);
-        bool isPressed = (p1On || p2On);
+        bool isPressed = false;
+        
+        if (s->isPressure()) {
+            // Pressure plate: activated by PushableBlock
+            for (auto block : pushableBlocks) {
+                if (block && block->occupies(sx, sy)) {
+                    isPressed = true;
+                    break;
+        }
+    }
+        } else {
+            // Regular switch: activated by player
+            bool p1On = (p1.getPosition().getX() == sx && p1.getPosition().getY() == sy);
+            bool p2On = (p2.getPosition().getX() == sx && p2.getPosition().getY() == sy);
+            isPressed = (p1On || p2On);
+        }
 
         if (s->isOn() != isPressed) {
             s->setState(isPressed);
-            if (p1On) p1.draw();
-            if (p2On) p2.draw();
+            
+            // Redraw switch
+            screen.setCharAt(sx, sy, s->renderChar());
+            screen.setColorAt(sx, sy, s->renderColor());
+            screen.drawCell(sx, sy);
+            
+            // Redraw players if they're on the switch
+            if (p1.getPosition().getX() == sx && p1.getPosition().getY() == sy) p1.draw();
+            if (p2.getPosition().getX() == sx && p2.getPosition().getY() == sy) p2.draw();
         }
     }
 
@@ -63,8 +87,8 @@ void Switch::updateAllSwitches(Game& game) {
             char visual = shouldOpen ? ' ' : '*';
             
             screen.setCharAt(ox, oy, visual);
-            gotoxy(ox, oy);
-            std::cout << visual << std::flush;
+            screen.setColorAt(ox, oy, shouldOpen ? 2 : 7);
+            screen.drawCell(ox, oy);
 
             if (p1.getPosition().getX() == ox && p1.getPosition().getY() == oy) p1.draw();
             if (p2.getPosition().getX() == ox && p2.getPosition().getY() == oy) p2.draw();

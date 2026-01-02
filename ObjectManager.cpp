@@ -6,7 +6,8 @@
 #include "Obstacle.h"
 #include "Riddle.h"
 #include "Screen.h"
-#include "Spring.h" // Ensure this is included
+#include "Spring.h"
+#include "PushableBlock.h"
 #include <algorithm>
 #include <vector>
 #include <memory>
@@ -35,12 +36,24 @@ void Game::rebuildObjectGrid() {
     objectGrid.assign(Screen::MAX_Y + 1, std::vector<GameObject*>(Screen::MAX_X + 1, nullptr));
     for (auto& u : objects) {
         if (!u) continue;
-        auto& p = u->getPosition();
-        int x = p.getX(); 
-        int y = p.getY();
         
-        if (x >= 0 && x <= Screen::MAX_X && y >= 0 && y <= Screen::MAX_Y) {
-            objectGrid[y][x] = u.get();
+        // Special handling for PushableBlock (multi-tile)
+        if (auto pb = dynamic_cast<PushableBlock*>(u.get())) {
+            auto tiles = pb->getOccupiedTiles();
+            for (const auto& [x, y] : tiles) {
+                if (x >= 0 && x <= Screen::MAX_X && y >= 0 && y <= Screen::MAX_Y) {
+                    objectGrid[y][x] = pb;
+                }
+            }
+        } else {
+            // Single-tile objects
+            auto& p = u->getPosition();
+            int x = p.getX(); 
+            int y = p.getY();
+            
+            if (x >= 0 && x <= Screen::MAX_X && y >= 0 && y <= Screen::MAX_Y) {
+                objectGrid[y][x] = u.get();
+            }
         }
     }
 }
@@ -130,6 +143,15 @@ std::vector<Bomb*> Game::getBombs() {
     for (auto& u : objects) {
         if (!u) continue;
         if (auto b = dynamic_cast<Bomb*>(u.get())) out.push_back(b);
+    }
+    return out;
+}
+
+std::vector<PushableBlock*> Game::getPushableBlocks() {
+    std::vector<PushableBlock*> out;
+    for (auto& u : objects) {
+        if (!u) continue;
+        if (auto pb = dynamic_cast<PushableBlock*>(u.get())) out.push_back(pb);
     }
     return out;
 }

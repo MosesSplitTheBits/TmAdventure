@@ -18,6 +18,7 @@
 #include "Torch.h"
 #include "Bomb.h"
 #include "Spring.h" 
+#include "PushableBlock.h"
 
 class Game {
 private:
@@ -66,6 +67,7 @@ public:
     std::vector<Torch*> getTorches();
     std::vector<Bomb*> getBombs();
     std::vector<Spring*> getSprings();
+    std::vector<PushableBlock*> getPushableBlocks();
 
     // Getters for Interactions
     PuzzleManager& getPuzzles() { return puzzles; }

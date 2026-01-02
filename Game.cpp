@@ -141,11 +141,17 @@ bool Game::handlePlayerInteraction(Player& player) {
 }
 
 bool Game::handleEvents() {
+
     // 1. Generic Interaction (Polymorphism!) - Skip players waiting at door
     if (!p1.isWaitingAtDoor() && !handlePlayerInteraction(p1)) return false;
     if (!p2.isWaitingAtDoor() && !handlePlayerInteraction(p2)) return false;
     
-    // 2. Global State Updates
+    // 2 Try to push blocks after both players have interacted
+    for (auto block : getPushableBlocks()) {
+        block->tryPush(*this);
+    }
+
+    // 3. Global State Updates
     Switch::updateAllSwitches(*this);
     Door::updateProximityDoors(*this);
     Bomb::handleBombExplosions(*this);
@@ -226,10 +232,20 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
     // Iterate ALL objects and let them draw themselves. 
     // No more manual checks for "is this a door?" or "is this a key?"
     for (const auto& obj : objects) {
-        // Polymorphism: renderChar() and renderColor() are virtual!
+    // Special handling for multi-tile PushableBlocks
+    if (auto pb = dynamic_cast<PushableBlock*>(obj.get())) {
+        // Draw all tiles of the block
+        auto tiles = pb->getOccupiedTiles();
+        for (const auto& [x, y] : tiles) {
+            screen.setCharAt(x, y, pb->renderChar());
+            screen.setColorAt(x, y, pb->renderColor());
+        }
+    } else {
+        // Single-tile objects (normal behavior)
         screen.setCharAt(obj->getPosition().getX(), obj->getPosition().getY(), obj->renderChar());
         screen.setColorAt(obj->getPosition().getX(), obj->getPosition().getY(), obj->renderColor());
     }
+}
 
     // 6. Handle specific visual updates (like hollow doors)
     // This is cleaner than doing it inside the render loop

@@ -6,7 +6,6 @@ class Spring : public GameObject {
     int releaseDirection;
 
 public:
-    // We'll use 'Z' as the map character for Springs
     Spring(int x, int y, int dir) 
         : GameObject(x, y, '#', false), releaseDirection(dir) {}
 

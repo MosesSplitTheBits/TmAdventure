@@ -12,6 +12,7 @@
 #include <vector>
 #include "Room.h"
 #include "Wall.h"
+#include "PushableBlock.h"
 #include <iostream>
 #include "ObjectFactory.h"
 
@@ -49,8 +50,12 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
             return std::make_unique<Bomb>(x, y);
 
         case 'S':
-            // Switch takes (x, y, id)
-            return std::make_unique<Switch>(x, y, room);
+            // Regular switch (player-activated)
+            return std::make_unique<Switch>(x, y, room, false);
+        
+        case 'P':
+            // Pressure plate (block-activated)
+            return std::make_unique<Switch>(x, y, room, true);
 
         case '#':
             // Spring takes (x, y, direction). Passing 0 (STAY/UP) as default.
@@ -70,6 +75,14 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
 
         case 'W':
             return std::make_unique<Wall>(x, y);
+        
+        case 'X':
+            // Create 3x2 PushableBlock (only once for top-left tile)
+            // Check if this position already has a block from a previous tile
+            if (!game.objectAt(x, y)) {
+                return std::make_unique<PushableBlock>(x, y, 3, 2);
+            }
+            return nullptr; // Skip if already part of another block
         
         
         
