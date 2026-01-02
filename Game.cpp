@@ -303,8 +303,9 @@ void Game::refreshVision() {
         }
     }
 
-    int r1 = p1.hasTorch() ? 20 : 10;
-    int r2 = p2.hasTorch() ? 20 : 10;
+    // Only calculate vision for players who are NOT waiting at door
+    int r1 = (p1.hasTorch() && !p1.isWaitingAtDoor()) ? 20 : (p1.isWaitingAtDoor() ? 0 : 10);
+    int r2 = (p2.hasTorch() && !p2.isWaitingAtDoor()) ? 20 : (p2.isWaitingAtDoor() ? 0 : 10);
 
     std::vector<std::pair<int, int>> floorTorches;
     if (dark) {
@@ -318,9 +319,12 @@ void Game::refreshVision() {
     auto inVision = [&](int x, int y) {
         if (!dark) return true;
 
+        // Skip vision calculation for players waiting at door (set radius to 0)
         int d1 = std::abs(p1.getPosition().getX() - x) + std::abs(p1.getPosition().getY() - y);
         int d2 = std::abs(p2.getPosition().getX() - x) + std::abs(p2.getPosition().getY() - y);
-        if (d1 <= r1 || d2 <= r2) return true;
+        
+        if (!p1.isWaitingAtDoor() && d1 <= r1) return true;
+        if (!p2.isWaitingAtDoor() && d2 <= r2) return true;
 
         for (const auto& torch : floorTorches) {
             int dt = std::abs(torch.first - x) + std::abs(torch.second - y);
