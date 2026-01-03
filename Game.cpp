@@ -375,14 +375,8 @@ void Game::refreshVision() {
     }
 }
 
-//helper to reset springs
-void Game::resetSprings() {
-    for (auto& obj : objects) {
-        if (auto s = dynamic_cast<Spring*>(obj.get())) {
-            s->reset();
-        }
-    }
-}
+
+
 
 
 

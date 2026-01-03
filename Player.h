@@ -47,6 +47,7 @@ public:
     void erase();
     void setPosition(int x, int y) { p.set(x, y); }
     Point& getPosition() { return p; }
+    const Point& getPosition() const { return p; }; //Const overload
     
     // Inventory
     bool hasKey(int keyId) const;

@@ -5,6 +5,7 @@
 class Spring : public GameObject {
     int releaseDirection;
     bool compressed = false;
+    bool shouldRedraw = false;
 
 public:
     Spring(int x, int y, int dir) 
@@ -13,9 +14,10 @@ public:
     // Called when player steps on the spring
     bool interact(Game& game, Player& player) override;
     char typeChar() const override { return '#'; }
-
     int getReleaseDirection() const { return releaseDirection; }
-    void reset() { compressed = false; }
+    void setCompressed(bool v){compressed = v;}
+    bool isCompressed() const { return compressed; }
+    void scheduleRedraw() { shouldRedraw = true; compressed = false; }
 
     //ObjectManager overrides
     bool isPassable() const override { return true; }

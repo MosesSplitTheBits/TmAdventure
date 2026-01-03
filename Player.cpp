@@ -53,16 +53,16 @@ void Player::keyPreesed(char k)
     }
     
     // Check STAY key (Index 4)
-    if (k == Keys[4] && compressedSprings > 0) {
-            springState.active = true;
-            springState.speed = compressedSprings;
-            springState.remainingCycles = compressedSprings * compressedSprings;
-            compressedSprings = 0;
-        }
-
-    p.changeDirection(Direction::directions[Direction::STAY]);
-
+    if (k == Keys[4] || k == toupper(Keys[4])) {
+    if (compressedSprings > 0) {
+        springState.active = true;
+        springState.speed = compressedSprings;
+        springState.remainingCycles = compressedSprings * compressedSprings;
+        compressedSprings = 0;
     }
+    p.changeDirection(Direction::directions[Direction::STAY]);
+}
+}
     
 
 
@@ -126,14 +126,26 @@ void Player::move(Game& game)
     }
     
     // Decrement spring boost timer after all moves this frame
-    if (springState.active) {
-        springState.remainingCycles--;
-            if (springState.remainingCycles <= 0) {
-                springState.active = false;
-                springState.speed = 0;
-                game.resetSprings(); //Visually reset spring
-                //GIVE CONTROL BACK
-                p.changeDirection(Direction::directions[Direction::STAY]);
+if (springState.active) {
+    springState.remainingCycles--;
+    if (springState.remainingCycles <= 0) {
+        springState.active = false;
+        springState.speed = 0;
+        
+        // Reset all springs to visible when spring expires
+        for (auto spring : game.getSprings()) {
+            if (spring->isCompressed()) {
+                spring->setCompressed(false);
+                int sx = spring->getPosition().getX();
+                int sy = spring->getPosition().getY();
+                game.getScreen().setCharAt(sx, sy, '#');
+                game.getScreen().setColorAt(sx, sy, 6);
+                game.getScreen().drawCell(sx, sy);
+            }
+        }
+        
+        //GIVE CONTROL BACK
+        p.changeDirection(Direction::directions[Direction::STAY]);
     }
 }
 }
