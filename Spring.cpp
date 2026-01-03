@@ -6,6 +6,7 @@
 
 bool Spring::interact(Game& game, Player& player) 
 {
+    if(compressed) return true; // Already compressed = invisible
     // Get the direction the player is currently moving
     Direction playerDir = player.getPosition().getDir(); 
 
@@ -22,9 +23,17 @@ bool Spring::interact(Game& game, Player& player)
     if (isPushing && !player.springState.active) {
         player.compressedSprings++;
         player.springState.launchDir = springReleaseDir;
-        // Hide the spring when compressed
-        game.getScreen().setCharAt(getPosition().getX(), getPosition().getY(), ' ');
-        game.getScreen().drawCell(getPosition().getX(), getPosition().getY());
+        compressed = true; //Mark it as compressed
+        // visually remove it immediately
+        game.getScreen().setCharAt(
+            getPosition().getX(),
+            getPosition().getY(),
+            ' '
+        );
+        game.getScreen().drawCell(
+            getPosition().getX(),
+            getPosition().getY()
+        );
     }
     
     return true; 

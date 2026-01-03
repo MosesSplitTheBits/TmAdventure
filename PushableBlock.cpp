@@ -5,7 +5,14 @@
 #include <iostream> 
 
 bool PushableBlock::interact(Game& game, Player& player) {
-    Direction pushDir = player.getPosition().getDir();
+    Direction pushDir;
+
+    if (player.springState.active) {
+        pushDir = player.springState.launchDir;
+
+    } else {
+        pushDir = player.getPosition().getDir();
+    }
     
     int dirIndex = -1;
     for (int i = 0; i < 4; ++i) {

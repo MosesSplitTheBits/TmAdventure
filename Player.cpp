@@ -11,10 +11,25 @@
 // 1. SET DIRECTION LOGIC
 void Player::keyPreesed(char k)
 {
-    //Lock movement during spring launch
+    // During spring: allow ONLY sideways movement
     if (springState.active) {
-    return;
+        Direction newDir;
+
+        for (int i = 0; i < 4; ++i) {
+            if (k == Keys[i] || k == toupper(Keys[i])) {
+                newDir = Direction::directions[i];
+
+                 // Allow only perpendicular movement
+                if (newDir.dx() * springState.launchDir.dx() +
+                    newDir.dy() * springState.launchDir.dy() == 0) {
+                    p.changeDirection(newDir);
+                }
+            return;
+        }
     }
+
+    return;
+}
     Direction oldDir = p.getDir();
     
     // Check movement keys (0=Up, 1=Down, 2=Left, 3=Right usually)
@@ -56,10 +71,12 @@ void Player::move(Game& game)
 {
     // Determine how many times to move this frame
     int movesThisFrame = springState.active ? springState.speed : 1;
-
-    //Check if springed
-    Direction moveDir = springState.active ? springState.launchDir : p.getDir();
-    
+    Direction moveDir = p.getDir();  // default to player direction
+    //If spring active, override moveDir
+    if (springState.active) {
+        moveDir = springState.launchDir;
+    }
+    bool blockedByPushable = false;
     for (int moveCount = 0; moveCount < movesThisFrame; ++moveCount) {
         // Calculate where we WANT to go
         int nx = p.getX() + moveDir.dx();
@@ -74,16 +91,27 @@ void Player::move(Game& game)
             if (!keepMoving || (obj && !obj->isPassable())) {
 
                 if (springState.active) {
-                     // cancel spring safely
-                    springState.active = false;
-                    springState.speed = 0;
-                    springState.remainingCycles = 0;
-                    p.changeDirection(Direction::directions[Direction::STAY]);
-                }
+                    PushableBlock* block = dynamic_cast<PushableBlock*>(obj);
 
-                break; 
-}
+                    if (!block) {
+                        // Hit wall / obstacle → cancel spring immediately
+                         springState.active = false;
+                         springState.speed = 0;
+                        springState.remainingCycles = 0;
+                        p.changeDirection(Direction::directions[Direction::STAY]);
+                        return; // fully stop movement
+                } else {
+                        // Hit pushable block → spring continues
+                        blockedByPushable = true;
+                        moveDir = p.getDir();
+                        continue;
+                }
         }
+
+        break;
+
+        }
+}
 
         // B. Actually move
         erase();      
@@ -103,9 +131,9 @@ void Player::move(Game& game)
             if (springState.remainingCycles <= 0) {
                 springState.active = false;
                 springState.speed = 0;
-
+                game.resetSprings(); //Visually reset spring
                 //GIVE CONTROL BACK
-             p.changeDirection(Direction::directions[Direction::STAY]);
+                p.changeDirection(Direction::directions[Direction::STAY]);
     }
 }
 }

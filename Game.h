@@ -92,6 +92,9 @@ public:
     int getVisionRadius(int px, int py) const;
     void refreshVision();
 
+    //Helper to reset springs
+    void resetSprings();
+
 };
 
 // --- IMPORTANT: This must be OUTSIDE the class ---
