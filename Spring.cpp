@@ -1,6 +1,7 @@
 #include "Spring.h"
 #include "Game.h"
 #include "Player.h"
+#include "Sound.h"
 
 
 
@@ -22,6 +23,7 @@ bool Spring::interact(Game& game, Player& player)
 
     if (isPushing && !player.springState.active) {
         player.compressedSprings++;
+        Sound::SpringCompress(player.compressedSprings);
         player.springState.launchDir = springReleaseDir;
         compressed = true; //Mark it as compressed
         // visually remove it immediately

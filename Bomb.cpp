@@ -3,6 +3,7 @@
 #include "Screen.h"
 #include "Bomb.h"
 #include "GameObject.h"
+#include "Sound.h"
 
 
 bool Bomb::interact(Game& game, Player& player) {
@@ -29,6 +30,7 @@ void Bomb::handleBombExplosions(Game& game) {
             bomb->tick();
             
             if (bomb->hasExploded()) {
+                Sound::BombExplode();
                 int bx = bomb->getPosition().getX();
                 int by = bomb->getPosition().getY();
                 

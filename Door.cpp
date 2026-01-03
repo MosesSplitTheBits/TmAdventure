@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include "Game.h"
+#include "Sound.h"
 
 
 
@@ -186,6 +187,7 @@ bool Door::interact(Game& game, Player& player)
 
     // Victory door: open '4' with no target
     if (doorType == '4' && target == nullptr) {
+        Sound::DoorWinOpen();
         player.setWon(true);
         return true;
     }

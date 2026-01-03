@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cctype>
 #include "utils.h"
+#include "Sound.h"
 
 // 1. SET DIRECTION LOGIC
 void Player::keyPreesed(char k)
@@ -95,6 +96,7 @@ void Player::move(Game& game)
 
                     if (!block) {
                         // Hit wall / obstacle → cancel spring immediately
+                        Sound::ThumpWall();
                          springState.active = false;
                          springState.speed = 0;
                         springState.remainingCycles = 0;
@@ -102,6 +104,7 @@ void Player::move(Game& game)
                         return; // fully stop movement
                 } else {
                         // Hit pushable block → spring continues
+                        Sound::ThumpWall();
                         blockedByPushable = true;
                         moveDir = p.getDir();
                         continue;
@@ -212,6 +215,7 @@ bool Player::dropBomb() {
 void Player::tryDropBomb(Game& game) {
     if (!dropBomb()) return;
 
+    Sound::BombPlant();
     int dropX = p.getX();
     int dropY = p.getY();
     Direction dir = p.getDir();

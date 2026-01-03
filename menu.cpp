@@ -1,14 +1,22 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <conio.h>
 #include "menu.h"
+#include "Settings.h"
 #include "utils.h"
+#include "Sound.h"
 
-static const std::vector<const char*> options = {
-    "Start a new game",
-    "Present instructions and keys",
-    "EXIT"
-};
+static std::vector<std::string> BuildMenuOptions()
+{
+    std::vector<std::string> options;
+    options.emplace_back("Start a new game");
+    options.emplace_back("Present instructions and keys");
+    options.emplace_back(std::string("Colors: ") + (gSettings.useColors ? "[X]" : "[ ]"));
+    options.emplace_back(std::string("Sound : ") + (gSettings.useSound ? "[X]" : "[ ]"));
+    options.emplace_back("EXIT");
+    return options;
+}
 
 static void DrawMenu(int selected)
 {
@@ -16,6 +24,8 @@ static void DrawMenu(int selected)
     hideCursor();
     const int startX = 10;
     const int startY = 5;
+
+    const auto options = BuildMenuOptions();
     for (size_t i = 0; i < options.size(); ++i)
     {
         gotoxy(startX, startY + (int)i);
@@ -44,26 +54,35 @@ MenuOptions runMenu()
 {
     int selected = 0;
     while (true) {
+        const auto options = BuildMenuOptions();
         DrawMenu(selected);
         int ch = _getch();
         if (ch == 224 || ch == 0) { // arrow keys
             int code = _getch();
             if (code == 72) { // up
                 selected = (selected - 1 + (int)options.size()) % (int)options.size();
+                Sound::TickMenuNav();
             } else if (code == 80) { // down
                 selected = (selected + 1) % (int)options.size();
+                Sound::TickMenuNav();
             }
         } else if (ch == 13) { // Enter
-            if (selected == 0) return MENU_START;
-            if (selected == 1) { PrintInstructionScreen(); continue; }
+            if (selected == 0) { Sound::TickMenuSelect(); return MENU_START; }
+            if (selected == 1) { Sound::TickMenuSelect(); PrintInstructionScreen(); continue; }
+            if (selected == 2) { gSettings.useColors = !gSettings.useColors; Sound::TickMenuToggle(); continue; }
+            if (selected == 3) { gSettings.useSound  = !gSettings.useSound;  Sound::TickMenuToggle(); continue; }
+            Sound::TickMenuSelect();
             return MENU_EXIT;
         } else if (ch == 27) { // ESC
             return MENU_EXIT;
         } else if (ch == '1') {
+            Sound::TickMenuSelect();
             return MENU_START;
         } else if (ch == '8') {
+            Sound::TickMenuSelect();
             PrintInstructionScreen();
         } else if (ch == '9') {
+            Sound::TickMenuSelect();
             return MENU_EXIT;
         }
     }

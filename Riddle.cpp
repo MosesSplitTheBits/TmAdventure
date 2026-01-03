@@ -2,6 +2,7 @@
 #include "Game.h"
 #include <iostream>
 #include <string>
+#include "Sound.h"
 
 std::vector<std::unique_ptr<Riddle>> Riddle::createFromMap(const std::vector<std::string>& mapData, int roomId) 
 {
@@ -28,6 +29,7 @@ bool Riddle::interact(Game& game, Player& player)
         }
 
         if (solved) {
+            Sound::RiddleCorrect();
             setSolved(true);
             
             // Let the player pick up the key (id same as riddle id)
