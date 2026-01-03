@@ -27,6 +27,7 @@ public:
     }
     void draw(char c);
     void move();
+    void move(const Direction& d);
 
     void erase() 
     {

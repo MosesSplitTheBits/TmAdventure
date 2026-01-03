@@ -11,54 +11,103 @@
 // 1. SET DIRECTION LOGIC
 void Player::keyPreesed(char k)
 {
+    //Lock movement during spring launch
+    if (springState.active) {
+    return;
+    }
+    Direction oldDir = p.getDir();
+    
     // Check movement keys (0=Up, 1=Down, 2=Left, 3=Right usually)
     for (int i = 0; i < 4; ++i) {
         if (k == Keys[i] || k == toupper(Keys[i])) {
-            p.changeDirection(Direction::directions[i]);
+            Direction newDir = Direction::directions[i];
+            bool directionChanged =
+            newDir.dx() != oldDir.dx() ||
+            newDir.dy() != oldDir.dy();
+            
+            if (directionChanged && compressedSprings > 0) {
+                springState.active = true;
+                springState.speed = compressedSprings;
+                springState.remainingCycles = compressedSprings * compressedSprings;
+                compressedSprings = 0;
+            }
+            
+            p.changeDirection(newDir);
             return;
         }
     }
     
     // Check STAY key (Index 4)
-    if (k == Keys[4] || k == toupper(Keys[4])) {
-        p.changeDirection(Direction::directions[Direction::STAY]);
+    if (k == Keys[4] && compressedSprings > 0) {
+            springState.active = true;
+            springState.speed = compressedSprings;
+            springState.remainingCycles = compressedSprings * compressedSprings;
+            compressedSprings = 0;
+        }
+
+    p.changeDirection(Direction::directions[Direction::STAY]);
+
     }
-}
+    
+
 
 // 2. MOVE LOGIC (With Collision Check)
 void Player::move(Game& game)
 {
-    // Calculate where we WANT to go
-    int nx = p.getX() + p.getDir().dx();
-    int ny = p.getY() + p.getDir().dy();
+    // Determine how many times to move this frame
+    int movesThisFrame = springState.active ? springState.speed : 1;
 
-    // A. Check Game Objects (Doors, Walls, Obstacles)
-    GameObject* obj = game.objectAt(nx, ny);
-    if (obj) {
-        // This solves the riddle and removes it from the game
-        bool keepMoving = obj->interact(game, *this);
+    //Check if springed
+    Direction moveDir = springState.active ? springState.launchDir : p.getDir();
+    
+    for (int moveCount = 0; moveCount < movesThisFrame; ++moveCount) {
+        // Calculate where we WANT to go
+        int nx = p.getX() + moveDir.dx();
+        int ny = p.getY() + moveDir.dy();
+
+        // A. Check Game Objects (Doors, Walls, Obstacles)
+        GameObject* obj = game.objectAt(nx, ny);
+        if (obj) {
+            bool keepMoving = obj->interact(game, *this);
+            obj = game.objectAt(nx, ny);
+            
+            if (!keepMoving || (obj && !obj->isPassable())) {
+
+                if (springState.active) {
+                     // cancel spring safely
+                    springState.active = false;
+                    springState.speed = 0;
+                    springState.remainingCycles = 0;
+                    p.changeDirection(Direction::directions[Direction::STAY]);
+                }
+
+                break; 
+}
+        }
+
+        // B. Actually move
+        erase();      
+        p.move(moveDir);     
         
-        // Re-fetch object (it might be gone now!)
-        obj = game.objectAt(nx, ny);
+        underChar = screen.getCharAt(p.getX(), p.getY());
+        if (underChar == '?') underChar = ' ';
         
-        // If interaction failed or object still blocks us
-        if (!keepMoving || (obj && !obj->isPassable())) {
-            return; 
+        if (!waitingAtDoor) { 
+            draw();       
         }
     }
+    
+    // Decrement spring boost timer after all moves this frame
+    if (springState.active) {
+        springState.remainingCycles--;
+            if (springState.remainingCycles <= 0) {
+                springState.active = false;
+                springState.speed = 0;
 
-    erase();      
-    p.move();     
-    
-    // NOW this will capture ' ' because the riddle was already removed/cleared
-    underChar = screen.getCharAt(p.getX(), p.getY());
-    if (underChar == '?') underChar = ' ';
-    
-    //dont draw player if waiting at door
-    
-    if (!waitingAtDoor) { 
-        draw();       
-    }      
+                //GIVE CONTROL BACK
+             p.changeDirection(Direction::directions[Direction::STAY]);
+    }
+}
 }
 
 void Player::draw()

@@ -22,6 +22,12 @@ void Point::move()
     y += dir.dy();
 }
 
+//Overloaded move to accept direction
+void Point::move(const Direction& d) {
+    x += d.dx();
+    y += d.dy();
+}
+
 const Direction& Point::getDir() const {
     return dir;
 }

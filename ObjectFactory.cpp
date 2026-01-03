@@ -58,8 +58,9 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
             return std::make_unique<Switch>(x, y, room, true);
 
         case '#':
-            // Spring takes (x, y, direction). Passing 0 (STAY/UP) as default.
-            return std::make_unique<Spring>(x, y, 0);
+            // Springs always push RIGHT (direction 3)
+            // Player moves LEFT into wall, spring launches them back RIGHT
+            return std::make_unique<Spring>(x, y, 3); // 3 = RIGHT
 
         case '*':
             // Obstacle takes (x, y, id, type) - this one was actually correct
@@ -78,7 +79,6 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
         
         case 'X':
             // Create 3x2 PushableBlock (only once for top-left tile)
-            // Check if this position already has a block from a previous tile
             if (!game.objectAt(x, y)) {
                 return std::make_unique<PushableBlock>(x, y, 3, 2);
             }

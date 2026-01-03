@@ -4,24 +4,28 @@
 
 
 
-
 bool Spring::interact(Game& game, Player& player) 
 {
-    // 1. Get the direction the player is currently moving
-    Direction playerDirVec = player.getPosition().getDir(); 
+    // Get the direction the player is currently moving
+    Direction playerDir = player.getPosition().getDir(); 
 
-    // 2. Get the spring's force vector using the stored index
-    Direction springReleaseVec = Direction::directions[releaseDirection];
+    // Get the spring's release direction (always RIGHT = 3)
+    Direction springReleaseDir = Direction::directions[releaseDirection];
 
-    // 3. Check if player is moving OPPOSITE to the release direction
-    // (i.e., pushing into the spring towards the wall)
-    bool isPushing = (playerDirVec.getX() == -springReleaseVec.getX()) && 
-                     (playerDirVec.getY() == -springReleaseVec.getY());
 
-    if (isPushing) {
+    // Check if player is moving LEFT (opposite of spring's RIGHT direction)
+    // Spring releases RIGHT (1,0), so player must be moving LEFT (-1,0)
+    bool isPushing = (playerDir.dx() == -springReleaseDir.dx()) && 
+                     (playerDir.dy() == -springReleaseDir.dy());
+    
+
+    if (isPushing && !player.springState.active) {
         player.compressedSprings++;
+        player.springState.launchDir = springReleaseDir;
+        // Hide the spring when compressed
+        game.getScreen().setCharAt(getPosition().getX(), getPosition().getY(), ' ');
+        game.getScreen().drawCell(getPosition().getX(), getPosition().getY());
     }
     
-    // Return true so the player actually moves onto the tile
     return true; 
 }

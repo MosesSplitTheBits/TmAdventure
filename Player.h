@@ -11,9 +11,9 @@ class Game;
 struct SpringLaunchState 
 {
     bool active = false;
-    int speeed = 0;
+    int speed = 0;
     int remainingCycles = 0;
-    Direction direction = Direction::directions[Direction::STAY]; 
+    Direction launchDir;
 };
 
     

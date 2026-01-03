@@ -20,7 +20,7 @@ bool PushableBlock::interact(Game& game, Player& player) {
         int playerForce = 1;
         
         if (player.springState.active) {
-            playerForce = player.springState.speeed;
+            playerForce = player.springState.speed;
         }
         
         directionForces[dirIndex] += playerForce;
