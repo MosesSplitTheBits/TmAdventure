@@ -8,6 +8,7 @@
 
 bool Bomb::interact(Game& game, Player& player) {
     if (!isCollected()) {
+        if (player.hasItem()) return true; // Can't pick up if already holding something
         collect();
         player.pickBomb();
         game.removeObjectAt(getPosition().getX(), getPosition().getY());

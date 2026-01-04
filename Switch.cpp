@@ -37,12 +37,14 @@ void Switch::updateAllSwitches(Game& game) {
         int sy = s->getPosition().getY();
 
         bool isPressed = false;
+        bool covered = false;
         
         if (s->isPressure()) {
             // Pressure plate: activated by PushableBlock
             for (auto block : pushableBlocks) {
                 if (block && block->occupies(sx, sy)) {
                     isPressed = true;
+                    covered = true;
                     break;
         }
     }
@@ -52,7 +54,7 @@ void Switch::updateAllSwitches(Game& game) {
             bool p2On = (p2.getPosition().getX() == sx && p2.getPosition().getY() == sy);
             isPressed = (p1On || p2On);
         }
-
+        s->setCovered(covered);
         if (s->isOn() != isPressed) {
             s->setState(isPressed);
             
@@ -94,4 +96,18 @@ void Switch::updateAllSwitches(Game& game) {
             if (p2.getPosition().getX() == ox && p2.getPosition().getY() == oy) p2.draw();
         }
     }
+}
+char Switch::renderChar() const
+{
+    if (coveredByBlock) {
+        return ' ';   // visually disappear under block
+    }
+
+    // Pressure plate
+    if (isPressurePlate) {
+        return state ? ' ' : 'p';
+    }
+
+    // Regular switch
+    return state ? 'S' : 's';
 }

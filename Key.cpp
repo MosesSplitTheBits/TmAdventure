@@ -8,6 +8,7 @@
 bool Key::interact(Game& game, Player& player) 
 {
     if (!isCollected()) {
+        if (player.hasItem()) return true; // Can't pick up if already holding something
         Sound::PickupKey();
         collect();
         player.pickKey(getId());

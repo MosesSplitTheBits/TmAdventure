@@ -247,6 +247,7 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
     }
 }
 
+
     // 6. Handle specific visual updates (like hollow doors)
     // This is cleaner than doing it inside the render loop
     Door::updateProximityDoors(*this);
@@ -264,9 +265,17 @@ void Game::spawnPlayers(bool comingBack) {
     int p2x = 5, p2y = 6;
     bool foundSpawn = false;
 
+    // Manual override for MAP_2 only
+    if (currentRoom && currentRoom->getID() == 2) {
+        p1x = 4;  
+        p1y = 6;  
+        p2x = 6;  
+        p2y = 6;  
+        foundSpawn = true;
+    }
 
     // Case 2: Coming Back (Find the door we just exited from)
-    if (comingBack && lastUsedDoor) {
+    else if (comingBack && lastUsedDoor) {
         // We look for a door that leads to the room we just came from
         // But simpler: look for the '4' (Exit) door in this room
         for (auto d : getDoors()) {
@@ -358,6 +367,15 @@ void Game::refreshVision() {
                 (x == p2.getPosition().getX() && y == p2.getPosition().getY()))
                 continue;
 
+            // Don't overwrite PushableBlocks - they should always be visible
+            bool isPushableBlock = false;
+            for (auto block : getPushableBlocks()) {
+                if (block && block->occupies(x, y)) {
+                    isPushableBlock = true;
+                    break;
+                }
+            }
+            if (isPushableBlock) continue;
             bool vision = inVision(x, y);
 
             char ch = (!dark) ? screen.getCharAt(x, y) : (vision ? ' ' : 'd');

@@ -1,8 +1,10 @@
 #include "Riddle.h"
 #include "Game.h"
+#include "Key.h"
 #include <iostream>
 #include <string>
 #include "Sound.h"
+
 
 std::vector<std::unique_ptr<Riddle>> Riddle::createFromMap(const std::vector<std::string>& mapData, int roomId) 
 {
@@ -32,10 +34,19 @@ bool Riddle::interact(Game& game, Player& player)
             Sound::RiddleCorrect();
             setSolved(true);
             
-            // Let the player pick up the key (id same as riddle id)
-            player.pickKey(getId());
+            // Capture data before removing the Riddle object
+            int x = getPosition().getX();
+            int y = getPosition().getY();
+            int keyId = getId();
             
-            // Visuals
+            // 1. Remove the Riddle object (so the '?' goes away)
+            game.removeObjectAt(x, y);
+
+            // 2. Spawn the Key at the same spot
+            game.addObject(std::make_unique<Key>(x, y, keyId));
+
+            // 3. Update visuals
+            game.getScreen().setCharAt(x, y, 'K');
             game.getScreen().draw();
             player.draw();
         }

@@ -50,6 +50,7 @@ public:
     const Point& getPosition() const { return p; }; //Const overload
     
     // Inventory
+    bool hasItem() const { return playerInventory.type != ' '; }
     bool hasKey(int keyId) const;
     bool hasTorch() const;
     bool hasBomb() const;

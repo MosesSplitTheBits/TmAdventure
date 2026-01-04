@@ -5,6 +5,7 @@
 
 bool Torch::interact(Game& game, Player& player) {
     if (!isCollected()) {
+        if (player.hasItem()) return true; // Can't pick up if already holding something
         Sound::PickupTorch();
         collect();
         player.pickTorch();
