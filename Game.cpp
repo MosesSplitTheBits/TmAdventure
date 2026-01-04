@@ -169,6 +169,12 @@ bool Game::handleEvents() {
     Door::updateProximityDoors(*this);
     Bomb::handleBombExplosions(*this);
 
+    if (currentRoom && currentRoom->getID() == 3) 
+    {
+        if (p1.hasWon()) p1.setWaitingAtDoor(true);
+        if (p2.hasWon()) p2.setWaitingAtDoor(true);
+    }
+
     // Check for game end (only in final room when both actually won)
     if (currentRoom && currentRoom->getID() == 3 && p1.hasWon() && p2.hasWon()) return false;
     return true;
@@ -178,9 +184,9 @@ bool Game::pause() {
     system("cls");
     std::cout << "=== PAUSED ===\n";
     std::cout << "Press any key to resume...\n";
-    std::cout << "Press Q to quit to menu...\n";
+    std::cout << "Press ESC to quit to menu...\n";
     char ch = _getch();
-    if (ch == 'q' || ch == 'Q') return true;
+    if (ch == 27) return true;
     
     system("cls");
     screen.draw();
@@ -376,9 +382,13 @@ void Game::refreshVision() {
 
         for (int x = 0; x <= Screen::MAX_X; ++x) {
             // אל תכסה את השחקנים כאן (הם מצוירים בנפרד או בפונקציה שלהם)
-            if ((x == p1.getPosition().getX() && y == p1.getPosition().getY()) ||
-                (x == p2.getPosition().getX() && y == p2.getPosition().getY()))
+            if ((!p1.isWaitingAtDoor() &&
+                 x == p1.getPosition().getX() && y == p1.getPosition().getY()) ||
+                (!p2.isWaitingAtDoor() &&
+                 x == p2.getPosition().getX() && y == p2.getPosition().getY()))
+            {
                 continue;
+            }
 
             // Don't overwrite PushableBlocks - they should always be visible
             bool isPushableBlock = false;
