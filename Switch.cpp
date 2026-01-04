@@ -44,15 +44,18 @@ void Switch::updateAllSwitches(Game& game) {
         
         if (s->isPressure()) {
             // Pressure plate: activated by PushableBlock
+            bool blockOnTop = false;
             for (auto block : pushableBlocks) {
                 if (block && block->occupies(sx, sy)) {
-                    s->setState(true);
+                    blockOnTop = true;
                     covered = true;
                     break;
                 }
             }
+            // Set state based on whether block is currently on it
+            s->setState(blockOnTop);
         } 
-        else if (s->isToggle()) {  // Add this block
+        else if (s->isToggle()) {
             // Toggle switch: flip state when stepped on
             bool p1On = (p1.getPosition().getX() == sx && p1.getPosition().getY() == sy);
             bool p2On = (p2.getPosition().getX() == sx && p2.getPosition().getY() == sy);
@@ -61,7 +64,7 @@ void Switch::updateAllSwitches(Game& game) {
             bool currentlyPressed = (p1On || p2On);
             
             if (currentlyPressed && !wasPressed) {
-                s->setState(!s->isOn());  // Toggle the state
+                s->setState(!s->isOn());
                 shouldToggle = true;
             }
             wasPressed = currentlyPressed;
@@ -74,6 +77,11 @@ void Switch::updateAllSwitches(Game& game) {
         }
         
         s->setCovered(covered);
+
+        // DON'T redraw if covered by a block - let the block rendering handle it
+        if (covered) {
+            continue;
+        }
         
         // Redraw if state changed or it's a toggle that was just activated
         if (shouldToggle || s->renderChar() != screen.getCharAt(sx, sy)) {

@@ -286,6 +286,17 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
 }
 
 
+    // SECOND PASS: Force draw all PushableBlocks on top of everything else
+    for (const auto& obj : objects) {
+        if (auto pb = dynamic_cast<PushableBlock*>(obj.get())) {
+            auto tiles = pb->getOccupiedTiles();
+            for (const auto& [x, y] : tiles) {
+                screen.setCharAt(x, y, pb->renderChar());
+                screen.setColorAt(x, y, pb->renderColor());
+            }
+        }
+    }
+    
     // 6. Handle specific visual updates (like hollow doors)
     // This is cleaner than doing it inside the render loop
     Door::updateProximityDoors(*this);
