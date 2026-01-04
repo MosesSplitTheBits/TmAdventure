@@ -10,7 +10,7 @@
 
 class Room {
     // Store a pointer to the map data (which is in LevelData.h)
-    const std::vector<std::string>* mapData; 
+    std::vector<std::string> mapData; 
     int roomId;
     Room* next = nullptr;
     Room* prev = nullptr;
@@ -25,13 +25,12 @@ class Room {
 
 public:
     // Constructor: Takes a reference to the vector, stores its address
-    Room(const std::vector<std::string>& data, int id) 
-        : mapData(&data), roomId(id) {}
+    Room(std::vector<std::string> data, int id)
+    : mapData(std::move(data)), roomId(id) {}
 
     int getID() const { return roomId; }
-    
-    // Returns the map data in the format Screen::loadMap expects
-    const std::vector<std::string>& getMapData() const { return *mapData; }
+    const std::vector<std::string>& getMapData() const { return mapData; }
+
 
     void setNext(Room* r) { next = r; }
     void setPrev(Room* r) { prev = r; }

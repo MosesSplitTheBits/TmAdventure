@@ -5,7 +5,7 @@
 #include <map> // Required for savedRoomObjects
 #include "Screen.h"
 #include "Player.h"
-#include "LevelData.h"
+#include "MapLoader.h"
 #include "Room.h"
 #include "GameObject.h"
 #include "Door.h"

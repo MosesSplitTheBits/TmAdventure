@@ -13,7 +13,6 @@
 #include "Obstacle.h"
 #include "Door.h"
 #include "Room.h" 
-#include "LevelData.h"
 #include "Wall.h"
 #include "Point.h"
 #include "Direction.h"
@@ -26,6 +25,7 @@
 #include "Riddle.h" 
 #include "ObjectFactory.h"
 #include "Bomb.h"
+#include "MapLoader.h"
 
 Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom)
     : screen(s), p1(p1_ref), p2(p2_ref), currentRoom(nullptr)
@@ -39,9 +39,22 @@ void startGame()
     system("cls");
     std::srand((unsigned)std::time(nullptr));
 
-    Room* room1 = new Room(LevelData::MAP_1, 1);
-    Room* room2 = new Room(LevelData::MAP_2, 2);
-    Room* room3 = new Room(LevelData::MAP_3, 3);
+    Room* room1 = nullptr;
+    Room* room2 = nullptr;
+    Room* room3 = nullptr;
+
+    try 
+    {
+        room1 = new Room(MapLoader::load("Maps/map_1.txt"), 1);
+        room2 = new Room(MapLoader::load("Maps/map_2.txt"), 2);
+        room3 = new Room(MapLoader::load("Maps/map_3.txt"), 3);
+    }
+    catch (const std::exception& e) 
+    {
+        std::cerr << "Failed to load maps: " << e.what() << std::endl;
+        _getch();
+        return;
+    }
 
     room1->setNext(room2);
     room2->setPrev(room1);
