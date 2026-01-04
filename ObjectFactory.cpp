@@ -27,17 +27,13 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
     {
         case '4':
         {
-            // בדיקה אם החדר הבא קיים
             Room* next = game.getCurrentRoom()->getNext();
-            if (!next) std::cout << "WARNING: Door 4 has no next room!" << std::endl;
             return std::make_unique<Door>(x, y, room, tile, next);
         }
 
         case '3':
         {
-            // בדיקה אם החדר הקודם קיים
             Room* prev = game.getCurrentRoom()->getPrev();
-            if (!prev) std::cout << "WARNING: Door 3 has no prev room!" << std::endl;
             return std::make_unique<Door>(x, y, room, tile, prev, false);
         }
         
@@ -51,11 +47,14 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
 
         case 'S':
             // Regular switch (player-activated)
-            return std::make_unique<Switch>(x, y, room, false);
+            return std::make_unique<Switch>(x, y, room, false, false);
         
         case 'P':
             // Pressure plate (block-activated)
-            return std::make_unique<Switch>(x, y, room, true);
+            return std::make_unique<Switch>(x, y, room, true, false);
+        
+        case '/':  // Add this case for toggle switches
+            return std::make_unique<Switch>(x, y, game.getCurrentRoom()->getID(), false, true);
 
         case '#':
             // Springs always push RIGHT (direction 3)
