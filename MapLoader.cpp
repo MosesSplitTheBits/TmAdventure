@@ -102,7 +102,7 @@ std::vector<std::string> MapLoader::load(const std::string& path) {
 
         // אם אתה רוצה לאפשר שורות ריקות - אל תדלג
         // כאן: מדלגים על שורה ריקה
-        if (line.empty()) continue;
+        // if (line.empty()) continue;
 
         map.push_back(line);
     }

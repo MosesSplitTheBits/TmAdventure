@@ -177,6 +177,7 @@ bool Game::handleEvents() {
         block->tryPush(*this);
     }
 
+    rebuildObjectGrid();
     // 3. Global State Updates
     Switch::updateAllSwitches(*this);
     Door::updateProximityDoors(*this);
@@ -365,7 +366,6 @@ void Game::refreshVision() {
         }
     }
 
-    // Only calculate vision for players who are NOT waiting at door
     int r1 = (p1.hasTorch() && !p1.isWaitingAtDoor()) ? 20 : (p1.isWaitingAtDoor() ? 0 : 10);
     int r2 = (p2.hasTorch() && !p2.isWaitingAtDoor()) ? 20 : (p2.isWaitingAtDoor() ? 0 : 10);
 
@@ -381,10 +381,9 @@ void Game::refreshVision() {
     auto inVision = [&](int x, int y) {
         if (!dark) return true;
 
-        // Skip vision calculation for players waiting at door (set radius to 0)
         int d1 = std::abs(p1.getPosition().getX() - x) + std::abs(p1.getPosition().getY() - y);
         int d2 = std::abs(p2.getPosition().getX() - x) + std::abs(p2.getPosition().getY() - y);
-        
+
         if (!p1.isWaitingAtDoor() && d1 <= r1) return true;
         if (!p2.isWaitingAtDoor() && d2 <= r2) return true;
 
@@ -399,7 +398,6 @@ void Game::refreshVision() {
         if (y >= 21) continue;
 
         for (int x = 0; x <= Screen::MAX_X; ++x) {
-            // אל תכסה את השחקנים כאן (הם מצוירים בנפרד או בפונקציה שלהם)
             if ((!p1.isWaitingAtDoor() &&
                  x == p1.getPosition().getX() && y == p1.getPosition().getY()) ||
                 (!p2.isWaitingAtDoor() &&
@@ -408,15 +406,21 @@ void Game::refreshVision() {
                 continue;
             }
 
-            // Don't overwrite PushableBlocks - they should always be visible
-            bool isPushableBlock = false;
+            // FIX: Draw PushableBlocks instead of skipping drawCell().
+            PushableBlock* pbAt = nullptr;
             for (auto block : getPushableBlocks()) {
                 if (block && block->occupies(x, y)) {
-                    isPushableBlock = true;
+                    pbAt = block;
                     break;
                 }
             }
-            if (isPushableBlock) continue;
+            if (pbAt) {
+                screen.setCharAt(x, y, pbAt->renderChar());
+                screen.setColorAt(x, y, pbAt->renderColor());
+                screen.drawCell(x, y);
+                continue;
+            }
+
             bool vision = inVision(x, y);
 
             char ch = (!dark) ? screen.getCharAt(x, y) : (vision ? ' ' : 'd');

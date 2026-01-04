@@ -8,18 +8,14 @@ W          W                      W     W                                      W
 W          W                      W     W                                      W
 W          W                      W     W                                      W
 W          W                      W     W                                      W
-W          W                      W     W                                      W
 W          WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+W                                                                              W
 W                                                                              W
 W                                                                       4444   W
 W     ***                                                               4444   W
 W     *?*                      B                                        4444   W
 W     ***                                                               4444   W
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW    WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-W                                 W     W                                      W
-W                                 W     W                                      W
-W                                 W     W                                      W
-W                                 W     W                                      W
 W                                 W     W                                      W
 W                                 W     W                                      W
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW

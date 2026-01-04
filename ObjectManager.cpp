@@ -32,29 +32,27 @@ void Game::addObject(std::unique_ptr<GameObject> obj) {
     }
 }
 
-void Game::rebuildObjectGrid() {
+void Game::rebuildObjectGrid()
+{
+    // Recreate the 2D grid (static objects only)
     objectGrid.assign(Screen::MAX_Y + 1, std::vector<GameObject*>(Screen::MAX_X + 1, nullptr));
-    for (auto& u : objects) {
-        if (!u) continue;
-        
-        // Special handling for PushableBlock (multi-tile)
-        if (auto pb = dynamic_cast<PushableBlock*>(u.get())) {
-            auto tiles = pb->getOccupiedTiles();
-            for (const auto& [x, y] : tiles) {
-                if (x >= 0 && x <= Screen::MAX_X && y >= 0 && y <= Screen::MAX_Y) {
-                    objectGrid[y][x] = pb;
-                }
-            }
-        } else {
-            // Single-tile objects
-            auto& p = u->getPosition();
-            int x = p.getX(); 
-            int y = p.getY();
-            
-            if (x >= 0 && x <= Screen::MAX_X && y >= 0 && y <= Screen::MAX_Y) {
-                objectGrid[y][x] = u.get();
-            }
-        }
+
+    for (const auto& obj : objects)
+    {
+        if (!obj) continue;
+
+        // IMPORTANT: don't store PushableBlocks in the static grid,
+        // otherwise they'll overwrite switches/items under them.
+        if (dynamic_cast<PushableBlock*>(obj.get()) != nullptr)
+            continue;
+
+        const int x = obj->getPosition().getX();
+        const int y = obj->getPosition().getY();
+
+        if (x < 0 || x > Screen::MAX_X || y < 0 || y > Screen::MAX_Y)
+            continue;
+
+        objectGrid[y][x] = obj.get();
     }
 }
 
@@ -76,11 +74,22 @@ void Game::removeObjectAt(int x, int y) {
     rebuildObjectGrid();
 }
 
-GameObject* Game::objectAt(int x, int y) {
-    if (x < 0 || x > Screen::MAX_X || y < 0 || y > Screen::MAX_Y) return nullptr;
-    if (objectGrid.empty()) return nullptr;
+GameObject* Game::objectAt(int x, int y)
+{
+    // 1) Movables on top (so collision/push works)
+    for (auto* block : getPushableBlocks()) {
+        if (block && block->occupies(x, y)) {
+            return block;
+        }
+    }
+
+    // 2) Then static grid (switches, keys, doors, etc.)
+    if (x < 0 || x > Screen::MAX_X || y < 0 || y > Screen::MAX_Y)
+        return nullptr;
+
     return objectGrid[y][x];
 }
+
 
 // --- TYPE-SPECIFIC GETTERS ---
 
