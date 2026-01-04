@@ -51,11 +51,14 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
 
         case 'S':
             // Regular switch (player-activated)
-            return std::make_unique<Switch>(x, y, room, false);
+            return std::make_unique<Switch>(x, y, room, false, false);
         
         case 'P':
             // Pressure plate (block-activated)
-            return std::make_unique<Switch>(x, y, room, true);
+            return std::make_unique<Switch>(x, y, room, true, false);
+        
+        case '/':  // Add this case for toggle switches
+            return std::make_unique<Switch>(x, y, game.getCurrentRoom()->getID(), false, true);
 
         case '#':
             // Springs always push RIGHT (direction 3)
