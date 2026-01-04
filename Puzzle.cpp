@@ -35,19 +35,24 @@ PuzzleManager::PuzzleManager()
     puzzles[2].correctIndex = 2;
 }
 
-bool PuzzleManager::showPuzzle(int mapIndex, int riddleId) {
+bool PuzzleManager::showPuzzle(
+    int mapIndex,
+    int riddleId,
+    const std::function<int()>& getHp,
+    int maxHp,
+    const std::function<void()>& onWrongAttempt
+) {
     Puzzle& p = puzzles[mapIndex];
 
     while (true) {
         system("cls");
-        
+
         // --- INFO HEADER ---
         std::cout << "\n\t========================================\n";
         std::cout << "\t             RIDDLE CHALLENGE           \n";
         std::cout << "\t========================================\n";
         std::cout << "\t Riddle Number: " << riddleId << "\n";
-        std::cout << "\t Total Wrong Attempts: " << totalWrongAttempts << " / " << maxWrongAttempts << "\n";
-        std::cout << "\t Attempts Remaining:   " << (maxWrongAttempts - totalWrongAttempts) << "\n";
+        std::cout << "\t HP: " << getHp() << " / " << maxHp << "\n";
         std::cout << "\t========================================\n\n";
 
         std::cout << p.question << "\n\n";
@@ -68,28 +73,31 @@ bool PuzzleManager::showPuzzle(int mapIndex, int riddleId) {
         if (choice - 1 == p.correctIndex) {
             std::cout << "\n\tCorrect! Press any key...";
             _getch();
-            return true; // Success, exit loop
-        } 
+            return true; // Success
+        }
         else {
             totalWrongAttempts++;
-            
-            if (isGameOver()) {
-                 system("cls");
-                 std::cout << "\n\n";
-                 std::cout << "\t  #####################################\n";
-                 std::cout << "\t  #                                   #\n";
-                 std::cout << "\t  #           GAME OVER               #\n";
-                 std::cout << "\t  #                                   #\n";
-                 std::cout << "\t  #      You failed 3 riddles!        #\n";
-                 std::cout << "\t  #                                   #\n";
-                 std::cout << "\t  #####################################\n\n";
-                 std::cout << "\t     Press any key to return to menu...";
-                 _getch();
-                 return false; // Failed (Game Over), exit loop
-            } 
-            
-            // If not game over, loop continues immediately.
-            // The screen clears at start of loop, updating the HUD with new stats.
+
+            // NEW: כל טעות מורידה 1 HP לשחקן שניסה
+            onWrongAttempt();
+
+            // NEW: Game Over רק לפי HP
+            if (getHp() <= 0) {
+                system("cls");
+                std::cout << "\n\n";
+                std::cout << "\t  #####################################\n";
+                std::cout << "\t  #                                   #\n";
+                std::cout << "\t  #           GAME OVER               #\n";
+                std::cout << "\t  #                                   #\n";
+                std::cout << "\t  #            OUT OF HP              #\n";
+                std::cout << "\t  #                                   #\n";
+                std::cout << "\t  #####################################\n\n";
+                std::cout << "\t     Press any key to return...";
+                _getch();
+                return false;
+            }
+
+            // ממשיכים לנסות, הכותרת תתעדכן בלולאה הבאה עם HP חדש
         }
     }
 }

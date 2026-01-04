@@ -51,13 +51,13 @@ void Bomb::handleBombExplosions(Game& game) {
                             game.getScreen().drawCell(x, y);
                             
                             // Kill players in range
-                            if (game.getp1().getPosition().getX() == x && game.getp1().getPosition().getY() == y) {
-                                game.getp1().setPosition(3, 2);
-                                game.getp1().draw();
+                            if (game.getp1().getPosition().getX() == x && game.getp1().getPosition().getY() == y) 
+                            {
+                                game.getp1().takeDamage(2); // NEW: -2 HP
                             }
-                            if (game.getp2().getPosition().getX() == x && game.getp2().getPosition().getY() == y) {
-                                game.getp2().setPosition(75, 2);
-                                game.getp2().draw();
+                            if (game.getp2().getPosition().getX() == x && game.getp2().getPosition().getY() == y) 
+                            {
+                                game.getp2().takeDamage(2); // NEW: -2 HP
                             }
                         }
                     }
@@ -65,6 +65,8 @@ void Bomb::handleBombExplosions(Game& game) {
                 
                 // Now remove the bomb
                 game.removeObjectAt(bx, by);
+                
+                // במקום שבו הבומבה מתפוצצת בפועל:
             }
         }
     }

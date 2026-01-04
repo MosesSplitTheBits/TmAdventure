@@ -22,34 +22,40 @@ std::vector<std::unique_ptr<Riddle>> Riddle::createFromMap(const std::vector<std
 
 bool Riddle::interact(Game& game, Player& player) 
 {
-    if (!isSolved()) {
-        // Access puzzles via the getter in Game
-        bool solved = game.getPuzzles().showPuzzle(getId() - 1, getId());
-
-        if (game.getPuzzles().isGameOver()) {
-            return false; // Game Over
-        }
-
-        if (solved) {
-            Sound::RiddleCorrect();
-            setSolved(true);
-            
-            // Capture data before removing the Riddle object
-            int x = getPosition().getX();
-            int y = getPosition().getY();
-            int keyId = getId();
-            
-            // 1. Remove the Riddle object (so the '?' goes away)
-            game.removeObjectAt(x, y);
-
-            // 2. Spawn the Key at the same spot
-            game.addObject(std::make_unique<Key>(x, y, keyId));
-
-            // 3. Update visuals
-            game.getScreen().setCharAt(x, y, 'K');
-            game.getScreen().draw();
-            player.draw();
-        }
+    if (isSolved()) {
+        return true;
     }
+
+    const bool solved = game.getPuzzles().showPuzzle(
+        getId() - 1,
+        getId(),
+        [&]() { return player.getHP(); },
+        player.getMaxHP(),
+        [&]() { game.damagePlayer(player, 1); } // -1 HP לכל טעות
+    );
+
+    if (solved) {
+        Sound::RiddleCorrect();
+        setSolved(true);
+
+        int x = getPosition().getX();
+        int y = getPosition().getY();
+        int keyId = getId();
+
+        game.removeObjectAt(x, y);
+        game.addObject(std::make_unique<Key>(x, y, keyId));
+
+        game.getScreen().setCharAt(x, y, 'K');
+        game.getScreen().draw();
+        player.draw();
+
+        return true;
+    }
+
+    // אם נכשל בגלל שנגמר HP (showPuzzle החזיר false)
+    if (player.isDead()) {
+        return false;
+    }
+
     return true;
 }

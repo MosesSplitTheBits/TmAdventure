@@ -3,6 +3,7 @@
 #include <iostream>
 #include <conio.h>
 #include <limits>
+#include <functional>
 
 struct Puzzle {
     std::string question;
@@ -13,8 +14,16 @@ struct Puzzle {
 class PuzzleManager {
 public:
     PuzzleManager();
-    // Updated signature to take riddleId for display
-    bool showPuzzle(int mapIndex, int riddleId);
+
+    // CHANGED: showPuzzle יודע להציג HP ולקנוס על טעות באמצעות callback
+    bool showPuzzle(
+        int mapIndex,
+        int riddleId,
+        const std::function<int()>& getHp,
+        int maxHp,
+        const std::function<void()>& onWrongAttempt
+    );
+
     int getPuzzleCount() const ;
 
     // global attempt counter
@@ -34,8 +43,8 @@ public:
 
 private:
     Puzzle puzzles[3];
-    int totalAttempts = 0;
-    int totalWrongAttempts = 0;
-    int maxTotalAttempts = 0; // Set to 0 to disable total limit, focusing only on wrong attempts
-    int maxWrongAttempts = 3; 
+    int totalAttempts;
+    int totalWrongAttempts;
+    int maxTotalAttempts; // Disabled
+    int maxWrongAttempts; // legacy (לא חובה להסיר, אבל לא ישמש ל-GameOver)
 };

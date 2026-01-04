@@ -8,17 +8,14 @@ class StatusBar {
 private:
     time_t appStartTime;      // הזמן שבו ה-EXE נפתח
     time_t runStartTime;      // הזמן שבו המשחק הנוכחי התחיל
-    int mistakes;             // מונה טעויות
     
 public:
     StatusBar();
     
     void resetRunTime();      // איפוס זמן לריצה נוכחית (כשמתחילים שלב/משחק מחדש)
-    void addMistake();        // הוספת טעות
-    void resetMistakes();     // איפוס טעויות
     
     // פונקציה שמציירת את הנתונים
-    void draw(int levelId, int puzzleMistakes);
+    void draw(int levelId, int p1Hp, int p1MaxHp, int p2Hp, int p2MaxHp, char p1ItemChar, char p2ItemChar);
     
     // עזרי זמן
     std::string formatTime(time_t seconds) const;

@@ -90,7 +90,7 @@ void Game::run()
     {
         int roomId = currentRoom ? currentRoom->getID() : 0;
         int puzzleFails = puzzles.getTotalWrongAttempts();
-        statusBar.draw(roomId, puzzleFails);
+        statusBar.draw(currentRoom->getID(), p1.getHP(), p1.getMaxHP(), p2.getHP(), p2.getMaxHP(), p1.getHeldItemChar(), p2.getHeldItemChar());
 
         if (_kbhit())
         {
@@ -127,6 +127,19 @@ void Game::run()
                 std::cout << "\t\t**********************************\n";
                 std::cout << "\t\t*                                *\n";
                 std::cout << "\t\t*    CONGRATULATIONS! YOU WON!   *\n";
+                std::cout << "\t\t*                                *\n";
+                std::cout << "\t\t**********************************\n\n";
+                std::cout << "\t\tPress any key to return to menu...";
+                _getch();
+            }
+            else if (p1.isDead() || p2.isDead()) 
+            {
+                system("cls");
+                std::cout << "\n\n\n";
+                std::cout << "\t\t**********************************\n";
+                std::cout << "\t\t*                                *\n";
+                std::cout << "\t\t*          GAME OVER!            *\n";
+                std::cout << "\t\t*      A PLAYER RAN OUT OF HP    *\n";
                 std::cout << "\t\t*                                *\n";
                 std::cout << "\t\t**********************************\n\n";
                 std::cout << "\t\tPress any key to return to menu...";
@@ -173,6 +186,11 @@ bool Game::handleEvents() {
     {
         if (p1.hasWon()) p1.setWaitingAtDoor(true);
         if (p2.hasWon()) p2.setWaitingAtDoor(true);
+    }
+
+    // NEW: Game over if any player died
+    if (p1.isDead() || p2.isDead()) {
+        return false;
     }
 
     // Check for game end (only in final room when both actually won)
@@ -417,7 +435,22 @@ void Game::refreshVision() {
 }
 
 
+void Game::damagePlayer(Player& player, int amount)
+{
+    if (player.isWaitingAtDoor()) return; // לא פוגעים בשחקן "שנעלם"
+    player.takeDamage(amount);
+}
 
+void Game::damagePlayersInManhattanRange(const Point& center, int range, int amount)
+{
+    auto dist = [&](const Player& pl) {
+        return std::abs(pl.getPosition().getX() - center.getX()) +
+               std::abs(pl.getPosition().getY() - center.getY());
+    };
+
+    if (!p1.isWaitingAtDoor() && dist(p1) <= range) damagePlayer(p1, amount);
+    if (!p2.isWaitingAtDoor() && dist(p2) <= range) damagePlayer(p2, amount);
+}
 
 
 

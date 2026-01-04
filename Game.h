@@ -19,6 +19,7 @@
 #include "Bomb.h"
 #include "Spring.h" 
 #include "PushableBlock.h"
+#include "Point.h"
 
 class Game {
 private:
@@ -50,6 +51,11 @@ public:
     void loadLevel(Room* nextRoom, bool comingBack = false);
     void spawnPlayers(bool comingBack);
     
+    void damagePlayer(Player& player, int amount);
+    void damagePlayersInManhattanRange(const Point& center, int range, int amount);
+
+    
+
 
 
     // Object Management

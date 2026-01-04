@@ -1,8 +1,8 @@
 #pragma once
 #include "Point.h"
 #include "Screen.h"
-
 #include <vector>
+#include <algorithm>
 
 // Forward declaration (tells compiler "Game" exists)
 class Game; 
@@ -32,12 +32,36 @@ private:
     bool won = false;
     bool waitingAtDoor = false;
 
+    int hp = 3; // Health points
+    int maxHp = 3;
+
 public:
     SpringLaunchState springState;
     int compressedSprings = 0;
 
-    Player(const char* keys, Screen& s, Point start) 
-        : Keys(keys), screen(s), p(start), underChar(' '), won(false) {}
+    Player(const char* keys, Screen& s, Point start)
+        : Keys(keys), screen(s), p(start), underChar(' '), won(false), hp(3), maxHp(3) {}
+
+
+    int getHP() const { return hp; }
+    int getMaxHP() const { return maxHp; }
+    bool isDead() const { return hp <= 0; }
+
+    void setMaxHP(int v) { maxHp = std::max(1, v); hp = std::min(hp, maxHp); }
+    void setHP(int v) { hp = std::clamp(v, 0, maxHp); }
+
+    void takeDamage(int dmg)
+    {
+        if (dmg <= 0) return;
+        hp = std::max(0, hp - dmg);
+    }
+
+    void heal(int healAmount)
+    {
+        if (healAmount <= 0) return;
+        hp = std::min(maxHp, hp + healAmount);
+    }
+
 
     void keyPreesed(char k);
     
@@ -73,6 +97,9 @@ public:
     
     bool isWaitingAtDoor() const { return waitingAtDoor; }
     void setWaitingAtDoor(bool waiting) { waitingAtDoor = waiting; }
+
+    // NEW: expose held item char for StatusBar (' ' means none)
+    char getHeldItemChar() const { return playerInventory.type; }
 };
 
 

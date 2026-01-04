@@ -5,7 +5,8 @@
 #include <iomanip>
 #include <sstream>
 
-StatusBar::StatusBar() : mistakes(0) {
+StatusBar::StatusBar() 
+{
     appStartTime = std::time(nullptr);
     runStartTime = std::time(nullptr);
 }
@@ -14,13 +15,7 @@ void StatusBar::resetRunTime() {
     runStartTime = std::time(nullptr);
 }
 
-void StatusBar::addMistake() {
-    mistakes++;
-}
 
-void StatusBar::resetMistakes() {
-    mistakes = 0;
-}
 
 std::string StatusBar::formatTime(time_t seconds) const {
     int h = seconds / 3600;
@@ -34,26 +29,30 @@ std::string StatusBar::formatTime(time_t seconds) const {
     return ss.str();
 }
 
-void StatusBar::draw(int levelId, int puzzleMistakes) {
+void StatusBar::draw(int levelId, int p1Hp, int p1MaxHp, int p2Hp, int p2MaxHp, char p1ItemChar, char p2ItemChar)
+{
     time_t currentTime = std::time(nullptr);
     time_t totalTime = currentTime - appStartTime;
     time_t currentRunTime = currentTime - runStartTime;
 
-    // צבע רקע לסטטוס בר (למשל לבן על כחול או סתם לבן)
-    // נניח שאנחנו מציירים בשורות 0-3
-
     int startY = 21;
-    setTextColor(15); // לבן על כחול
-    
+    setTextColor(15);
+
     gotoxy(0, startY);
     std::cout << "===============================================================================";
-    
+
     gotoxy(0, startY + 1);
-    std::cout << " LEVEL: " << levelId << " \t MISTAKES: " << puzzleMistakes;
-    
+
+    const char p1Item = (p1ItemChar == ' ') ? '-' : p1ItemChar;
+    const char p2Item = (p2ItemChar == ' ') ? '-' : p2ItemChar;
+
+    std::cout
+        << " LEVEL: " << levelId
+        << " \t P1 HP: " << p1Hp << "/" << p1MaxHp << " ITEM: " << p1Item
+        << " \t P2 HP: " << p2Hp << "/" << p2MaxHp << " ITEM: " << p2Item;
+
     gotoxy(0, startY + 2);
-    std::cout << " TOTAL TIME: " << formatTime(totalTime) << " \t RUN TIME: " << formatTime(currentRunTime);
-    
-    gotoxy(0, startY + 3);
-    std::cout << "===============================================================================";
+    std::cout
+        << " TOTAL TIME: " << formatTime(totalTime)
+        << " \t RUN TIME: " << formatTime(currentRunTime);
 }
