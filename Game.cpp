@@ -26,12 +26,14 @@
 #include "ObjectFactory.h"
 #include "Bomb.h"
 #include "MapLoader.h"
+#include "VisionSystem.h"
 
 Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom)
     : screen(s), p1(p1_ref), p2(p2_ref), currentRoom(nullptr)
 {
     puzzles.resetCounters(); 
     loadLevel(startRoom);
+    visionDirty = true;
 }
 
 void startGame()
@@ -48,6 +50,8 @@ void startGame()
         room1 = new Room(MapLoader::load("Maps/map_1.txt"), 1);
         room2 = new Room(MapLoader::load("Maps/map_2.txt"), 2);
         room3 = new Room(MapLoader::load("Maps/map_3.txt"), 3);
+        //set first room to dark
+        room1->setDark(true);
     }
     catch (const std::exception& e) 
     {
@@ -81,17 +85,15 @@ void startGame()
 
 void Game::run()
 {
-    screen.draw();
     statusBar.resetRunTime();
     const char p1_drop_key = 'e';
     const char p2_drop_key = 'o';
 
+    // Initial render
+    renderFrame();
+
     while (true)
     {
-        int roomId = currentRoom ? currentRoom->getID() : 0;
-        int puzzleFails = puzzles.getTotalWrongAttempts();
-        statusBar.draw(currentRoom->getID(), p1.getHP(), p1.getMaxHP(), p2.getHP(), p2.getMaxHP(), p1.getHeldItemChar(), p2.getHeldItemChar());
-
         if (_kbhit())
         {
             char ch = _getch();
@@ -100,7 +102,6 @@ void Game::run()
                 if (pause()) break;
             }
 
-            // Only process input for players who aren't waiting at door
             if (!p1.isWaitingAtDoor()) {
                 if (ch == p1_drop_key || ch == toupper(p1_drop_key)) {
                     p1.tryDropItem(*this);
@@ -110,19 +111,21 @@ void Game::run()
             if (!p2.isWaitingAtDoor()) {
                 if (ch == p2_drop_key || ch == toupper(p2_drop_key)) {
                      p2.tryDropItem(*this);
+                }
+                p2.keyPreesed(ch);
             }
-            p2.keyPreesed(ch);
-}
         }
 
-        // Only move and draw players who aren't waiting at door
         if (!p1.isWaitingAtDoor()) p1.move(*this);
         if (!p2.isWaitingAtDoor()) p2.move(*this);
+
+        if (currentRoom && currentRoom->isDark()) {
+            visionDirty = true;
+        }
 
         if (!handleEvents()) {
             if (isGameWon()) {
                 system("cls");
-                // Simple Win Screen
                 std::cout << "\n\n\n";
                 std::cout << "\t\t**********************************\n";
                 std::cout << "\t\t*                                *\n";
@@ -148,9 +151,64 @@ void Game::run()
             break;
         }
 
-        refreshVision();
+        // Render after all game logic completes
+        renderFrame();
+
         Sleep(100);
     }
+}
+
+// --- FULL-FRAME RENDERING ENGINE ---
+void Game::renderFrame()
+{
+    // 1. Clear buffer (reset to spaces and white)
+    screen.clear();
+    
+    // 2. Load map tiles into buffer
+    const auto& mapData = currentRoom->getMapData();
+    screen.loadMap(mapData);
+
+    // 3. Apply vision system (fog of war)
+    auto vision = visionSystem.compute(*currentRoom, p1, p2);
+    screen.applyVision(mapData, vision);
+    
+    // 4. Render all objects to buffer
+    for (const auto& obj : objects) {
+        if (auto pb = dynamic_cast<PushableBlock*>(obj.get())) {
+            for (const auto& [x, y] : pb->getOccupiedTiles()) {
+                screen.setCharAt(x, y, pb->renderChar());
+                screen.setColorAt(x, y, pb->renderColor());
+            }
+        } else {
+            screen.setCharAt(obj->getPosition().getX(),
+                             obj->getPosition().getY(),
+                             obj->renderChar());
+            screen.setColorAt(obj->getPosition().getX(),
+                              obj->getPosition().getY(),
+                              obj->renderColor());
+        }
+    }
+    
+    
+    // 5. Render players to buffer (skip if waiting at door - prevents ghosting)
+    if (!p1.isWaitingAtDoor()) {
+        screen.setCharAt(p1.getPosition().getX(), p1.getPosition().getY(), p1.renderChar());
+        screen.setColorAt(p1.getPosition().getX(), p1.getPosition().getY(), p1.renderColor());
+    }
+    
+    if (!p2.isWaitingAtDoor()) {
+        screen.setCharAt(p2.getPosition().getX(), p2.getPosition().getY(), p2.renderChar());
+        screen.setColorAt(p2.getPosition().getX(), p2.getPosition().getY(), p2.renderColor());
+    }
+    
+    // 6. Render StatusBar to buffer
+    statusBar.draw(screen, currentRoom->getID(), 
+                   p1.getHP(), p1.getMaxHP(), 
+                   p2.getHP(), p2.getMaxHP(), 
+                   p1.getHeldItemChar(), p2.getHeldItemChar());
+    
+    // 7. Single console output (actual rendering)
+    screen.draw();
 }
 
 // --- NEW GENERIC HANDLER ---
@@ -231,7 +289,7 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
     
     // 3. Load Map Background (Walls and Floor)
     const auto& mapData = currentRoom->getMapData();
-    screen.loadMap(mapData); 
+    visionDirty = true;
     
     // 4. Load Objects (Either restore from save or create new)
     auto it = savedRoomObjects.find(nextRoom);
@@ -304,8 +362,9 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
     // 7. Position Players
     spawnPlayers(comingBack);
 
-    // 8. Final Vision Update
-    refreshVision();
+    // 8. Force full screen render to display new room
+    renderFrame();
+
 }
 
 void Game::spawnPlayers(bool comingBack) {
@@ -314,17 +373,8 @@ void Game::spawnPlayers(bool comingBack) {
     int p2x = 5, p2y = 6;
     bool foundSpawn = false;
 
-    // Manual override for MAP_2 only
-    if (currentRoom && currentRoom->getID() == 2) {
-        p1x = 4;  
-        p1y = 6;  
-        p2x = 6;  
-        p2y = 6;  
-        foundSpawn = true;
-    }
-
     // Case 2: Coming Back (Find the door we just exited from)
-    else if (comingBack && lastUsedDoor) {
+     if (comingBack && lastUsedDoor) {
         // We look for a door that leads to the room we just came from
         // But simpler: look for the '4' (Exit) door in this room
         for (auto d : getDoors()) {
@@ -366,88 +416,6 @@ void Game::spawnPlayers(bool comingBack) {
     p2.getPosition().changeDirection(Direction::directions[Direction::STAY]);
 }
 
-
-//Calc vision radius for dark rooms
-void Game::refreshVision() {
-    bool dark = false;
-    if (currentRoom) {
-        const auto& map = currentRoom->getMapData();
-        for (const auto& row : map) {
-            if (row.find('T') != std::string::npos) { dark = true; break; }
-        }
-    }
-
-    int r1 = (p1.hasTorch() && !p1.isWaitingAtDoor()) ? 20 : (p1.isWaitingAtDoor() ? 0 : 10);
-    int r2 = (p2.hasTorch() && !p2.isWaitingAtDoor()) ? 20 : (p2.isWaitingAtDoor() ? 0 : 10);
-
-    std::vector<std::pair<int, int>> floorTorches;
-    if (dark) {
-        for (auto t : getTorches()) {
-            if (t && !t->isCollected()) {
-                floorTorches.push_back({t->getPosition().getX(), t->getPosition().getY()});
-            }
-        }
-    }
-
-    auto inVision = [&](int x, int y) {
-        if (!dark) return true;
-
-        int d1 = std::abs(p1.getPosition().getX() - x) + std::abs(p1.getPosition().getY() - y);
-        int d2 = std::abs(p2.getPosition().getX() - x) + std::abs(p2.getPosition().getY() - y);
-
-        if (!p1.isWaitingAtDoor() && d1 <= r1) return true;
-        if (!p2.isWaitingAtDoor() && d2 <= r2) return true;
-
-        for (const auto& torch : floorTorches) {
-            int dt = std::abs(torch.first - x) + std::abs(torch.second - y);
-            if (dt <= 5) return true;
-        }
-        return false;
-    };
-
-    for (int y = 0; y <= Screen::MAX_Y; ++y) {
-        if (y >= 21) continue;
-
-        for (int x = 0; x <= Screen::MAX_X; ++x) {
-            if ((!p1.isWaitingAtDoor() &&
-                 x == p1.getPosition().getX() && y == p1.getPosition().getY()) ||
-                (!p2.isWaitingAtDoor() &&
-                 x == p2.getPosition().getX() && y == p2.getPosition().getY()))
-            {
-                continue;
-            }
-
-            // FIX: Draw PushableBlocks instead of skipping drawCell().
-            PushableBlock* pbAt = nullptr;
-            for (auto block : getPushableBlocks()) {
-                if (block && block->occupies(x, y)) {
-                    pbAt = block;
-                    break;
-                }
-            }
-            if (pbAt) {
-                screen.setCharAt(x, y, pbAt->renderChar());
-                screen.setColorAt(x, y, pbAt->renderColor());
-                screen.drawCell(x, y);
-                continue;
-            }
-
-            bool vision = inVision(x, y);
-
-            char ch = (!dark) ? screen.getCharAt(x, y) : (vision ? ' ' : 'd');
-            int color = (!dark) ? screen.getColorAt(x, y) : (vision ? 7 : 8);
-
-            if (auto obj = objectAt(x, y)) {
-                bool visible = !dark || obj->typeChar() == 'W' || obj->typeChar() == 'T' || vision;
-                if (visible) { ch = obj->renderChar(); color = obj->renderColor(); }
-            }
-
-            screen.setCharAt(x, y, ch);
-            screen.setColorAt(x, y, color);
-            screen.drawCell(x, y);
-        }
-    }
-}
 
 
 void Game::damagePlayer(Player& player, int amount)

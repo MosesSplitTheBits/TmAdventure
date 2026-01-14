@@ -72,6 +72,9 @@ void Game::removeObjectAt(int x, int y) {
     
     // Rebuild grid to ensure pointers are valid
     rebuildObjectGrid();
+    
+    // Mark vision dirty so removed object updates display
+    visionDirty = true;
 }
 
 GameObject* Game::objectAt(int x, int y)

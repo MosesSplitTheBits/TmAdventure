@@ -45,10 +45,6 @@ bool Riddle::interact(Game& game, Player& player)
         game.removeObjectAt(x, y);
         game.addObject(std::make_unique<Key>(x, y, keyId));
 
-        game.getScreen().setCharAt(x, y, 'K');
-        game.getScreen().draw();
-        player.draw();
-
         return true;
     }
 

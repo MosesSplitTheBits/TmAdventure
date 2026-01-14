@@ -15,7 +15,7 @@ public:
     void resetRunTime();      // איפוס זמן לריצה נוכחית (כשמתחילים שלב/משחק מחדש)
     
     // פונקציה שמציירת את הנתונים
-    void draw(int levelId, int p1Hp, int p1MaxHp, int p2Hp, int p2MaxHp, char p1ItemChar, char p2ItemChar);
+    void draw(Screen& screen, int levelId, int p1Hp, int p1MaxHp, int p2Hp, int p2MaxHp, char p1ItemChar, char p2ItemChar);
     
     // עזרי זמן
     std::string formatTime(time_t seconds) const;

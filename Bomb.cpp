@@ -12,8 +12,6 @@ bool Bomb::interact(Game& game, Player& player) {
         collect();
         player.pickBomb();
         game.removeObjectAt(getPosition().getX(), getPosition().getY());
-        game.getScreen().setCharAt(getPosition().getX(), getPosition().getY(), ' ');
-        player.draw();
     }
     return true;
 }
@@ -45,10 +43,6 @@ void Bomb::handleBombExplosions(Game& game) {
                             if (obj && obj->typeChar() != 'B') { // Don't remove bomb itself yet
                                 game.removeObjectAt(x, y);
                             }
-                            
-                            game.getScreen().setCharAt(x, y, ' ');
-                            game.getScreen().setColorAt(x, y, 7);
-                            game.getScreen().drawCell(x, y);
                             
                             // Kill players in range
                             if (game.getp1().getPosition().getX() == x && game.getp1().getPosition().getY() == y) 

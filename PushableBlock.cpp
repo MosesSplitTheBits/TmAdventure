@@ -72,36 +72,13 @@ void PushableBlock::tryPush(Game& game) {
                 if (!canMove) break;
             }
             if (canMove) {
-                // Clear old tiles - just erase them
-                for (int dy = 0; dy < height; ++dy) {
-                    for (int dx = 0; dx < width; ++dx) {
-                        int oldX = anchorX + dx;
-                        int oldY = anchorY + dy;
-            
-                        game.getScreen().setCharAt(oldX, oldY, ' ');
-                        game.getScreen().setColorAt(oldX, oldY, 7);
-                        game.getScreen().drawCell(oldX, oldY);
-                    }
-             }
-    
-        // Update anchor position
-        anchorX = newAnchorX;
-        anchorY = newAnchorY;
-        p.set(anchorX, anchorY);
+                // Update anchor position
+                anchorX = newAnchorX;
+                anchorY = newAnchorY;
+                p.set(anchorX, anchorY);
     
         // Rebuild grid
         game.rebuildObjectGrid();
-    
-        // Draw new tiles
-        for (int dy = 0; dy < height; ++dy) {
-            for (int dx = 0; dx < width; ++dx) {
-                int newX = anchorX + dx;
-                int newY = anchorY + dy;
-                game.getScreen().setCharAt(newX, newY, 'X');
-                game.getScreen().setColorAt(newX, newY, 6);
-                game.getScreen().drawCell(newX, newY);
-            }
-        }
     
         break;
 }

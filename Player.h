@@ -73,6 +73,10 @@ public:
     Point& getPosition() { return p; }
     const Point& getPosition() const { return p; }; //Const overload
     
+    // Rendering (buffer-only, no console access)
+    char renderChar() const { return p.getChar(); }
+    int renderColor() const { return 7; } // White
+    
     // Inventory
     bool hasItem() const { return playerInventory.type != ' '; }
     bool hasKey(int keyId) const;

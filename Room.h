@@ -13,6 +13,7 @@ class Room {
     int roomId;
     Room* next = nullptr;
     Room* prev = nullptr;
+    bool dark = false;
 
     bool visited = false;
     std::vector<Obstacle> obstacles;
@@ -36,6 +37,9 @@ public:
 
     bool isVisited() const { return visited; }
     void setVisited(bool v) { visited = v; }
+
+    bool isDark() const { return dark; }
+    void setDark(bool d) { dark = d; }
 
     // saveState/loadState כמו שהיה אצלך
 };

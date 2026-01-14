@@ -10,8 +10,6 @@ bool Torch::interact(Game& game, Player& player) {
         collect();
         player.pickTorch();
         game.removeObjectAt(getPosition().getX(), getPosition().getY());
-        game.getScreen().setCharAt(getPosition().getX(), getPosition().getY(), ' ');
-        player.draw();
     }
     return true;
 }

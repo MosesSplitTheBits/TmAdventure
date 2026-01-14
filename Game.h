@@ -20,6 +20,7 @@
 #include "Spring.h" 
 #include "PushableBlock.h"
 #include "Point.h"
+#include "VisionSystem.h"
 
 class Game {
 private:
@@ -27,7 +28,7 @@ private:
     Player& p1;
     Player& p2;
     Door* lastUsedDoor = nullptr;
-    
+    VisionSystem visionSystem;
     // The main list of objects in the current room
     std::vector<std::unique_ptr<GameObject>> objects;
     
@@ -41,6 +42,10 @@ private:
     PuzzleManager puzzles;
     
     StatusBar statusBar;
+    bool visionDirty = true;
+
+    // Full-frame rendering method
+    void renderFrame();
 
 public:
     Game(Screen& s, Player& p1, Player& p2, Room* startRoom);
@@ -96,7 +101,6 @@ public:
     //For Torches
     bool isDarkened() const;
     int getVisionRadius(int px, int py) const;
-    void refreshVision();
 
 
 

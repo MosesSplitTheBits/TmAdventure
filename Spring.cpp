@@ -26,16 +26,6 @@ bool Spring::interact(Game& game, Player& player)
         Sound::SpringCompress(player.compressedSprings);
         player.springState.launchDir = springReleaseDir;
         compressed = true; //Mark it as compressed
-        // visually remove it immediately
-        game.getScreen().setCharAt(
-            getPosition().getX(),
-            getPosition().getY(),
-            ' '
-        );
-        game.getScreen().drawCell(
-            getPosition().getX(),
-            getPosition().getY()
-        );
     }
     
     return true; 

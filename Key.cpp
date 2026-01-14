@@ -13,8 +13,6 @@ bool Key::interact(Game& game, Player& player)
         collect();
         player.pickKey(getId());
         game.removeObjectAt(getPosition().getX(), getPosition().getY());
-        game.getScreen().setCharAt(getPosition().getX(), getPosition().getY(), ' ');
-        player.draw();
     }
     return true;
 }

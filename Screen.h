@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "utils.h" // בשביל gotoxy ו-setTextColor
+#include "VisionSystem.h"
 #include <iostream>
 
 class Screen {
@@ -21,8 +22,11 @@ public:
     Screen() {} // בנאי ריק
 
     // פונקציות קיימות
+    void clear(); // Clear buffer to spaces and white
     void loadMap(const std::vector<std::string>& mapData);
     void draw() const; // פונקציה שמציירת את כל המסך
+
+    void applyVision(const std::vector<std::string>& mapData, const VisionSystem::Grid& vision);
     
     // גטרים וסטררים
     char getCharAt(int x, int y) const {
@@ -44,18 +48,15 @@ public:
         }
     }
 
-    // פונקציה לציור תא בודד (יעיל יותר מציור כל המסך)
-    void drawCell(int x, int y) const {
-        if (x < 0 || x > MAX_X || y < 0 || y > MAX_Y) return;
-        gotoxy(x, y);
-        setTextColor(colors[y][x]);
-        std::cout << board[y][x];
-        setTextColor(7); // החזרת צבע לבן
+    // Write text string to buffer at position (for StatusBar)
+    void writeText(int x, int y, const std::string& text, int color = 7) {
+        for (size_t i = 0; i < text.length() && (int)(x + i) <= MAX_X; ++i) {
+            if (y >= 0 && y <= MAX_Y) {
+                board[y][x + i] = text[i];
+                colors[y][x + i] = color;
+            }
+        }
     }
-
-    
-
-    
 
 };
 

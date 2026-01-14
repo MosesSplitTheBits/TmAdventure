@@ -6,8 +6,8 @@
 
 void Point::draw(char c)
 {
-    gotoxy(x, y);
-    std::cout << c;
+    // DEPRECATED: No console access allowed
+    // All rendering now happens through Screen buffer
 }
 
 void Point::move()

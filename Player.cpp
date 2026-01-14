@@ -70,97 +70,76 @@ void Player::keyPreesed(char k)
 // 2. MOVE LOGIC (With Collision Check)
 void Player::move(Game& game)
 {
-    // Determine how many times to move this frame
+    if (waitingAtDoor)
+        return;
+
     int movesThisFrame = springState.active ? springState.speed : 1;
-    Direction moveDir = p.getDir();  // default to player direction
-    //If spring active, override moveDir
+
+    Direction moveDir = p.getDir();
     if (springState.active) {
         moveDir = springState.launchDir;
     }
-    bool blockedByPushable = false;
+
     for (int moveCount = 0; moveCount < movesThisFrame; ++moveCount) {
-        // Calculate where we WANT to go
+
         int nx = p.getX() + moveDir.dx();
         int ny = p.getY() + moveDir.dy();
 
-        // A. Check Game Objects (Doors, Walls, Obstacles)
         GameObject* obj = game.objectAt(nx, ny);
         if (obj) {
             bool keepMoving = obj->interact(game, *this);
             obj = game.objectAt(nx, ny);
-            
+
             if (!keepMoving || (obj && !obj->isPassable())) {
 
                 if (springState.active) {
                     PushableBlock* block = dynamic_cast<PushableBlock*>(obj);
 
                     if (!block) {
-                        // Hit wall / obstacle → cancel spring immediately
                         Sound::ThumpWall();
-                         springState.active = false;
-                         springState.speed = 0;
+                        springState.active = false;
+                        springState.speed = 0;
                         springState.remainingCycles = 0;
                         p.changeDirection(Direction::directions[Direction::STAY]);
-                        return; // fully stop movement
-                } else {
-                        // Hit pushable block → spring continues
-                        Sound::ThumpWall();
-                        blockedByPushable = true;
-                        moveDir = p.getDir();
-                        continue;
+                        return;
+                    }
                 }
-        }
 
-        break;
-
-        }
-}
-
-        // B. Actually move
-        erase();      
-        p.move(moveDir);     
-        
-        underChar = screen.getCharAt(p.getX(), p.getY());
-        if (underChar == '?') underChar = ' ';
-        
-        if (!waitingAtDoor) { 
-            draw();       
-        }
-    }
-    
-    // Decrement spring boost timer after all moves this frame
-if (springState.active) {
-    springState.remainingCycles--;
-    if (springState.remainingCycles <= 0) {
-        springState.active = false;
-        springState.speed = 0;
-        
-        // Reset all springs to visible when spring expires
-        for (auto spring : game.getSprings()) {
-            if (spring->isCompressed()) {
-                spring->setCompressed(false);
-                int sx = spring->getPosition().getX();
-                int sy = spring->getPosition().getY();
-                game.getScreen().setCharAt(sx, sy, '#');
-                game.getScreen().setColorAt(sx, sy, 6);
-                game.getScreen().drawCell(sx, sy);
+                break;
             }
         }
-        
-        //GIVE CONTROL BACK
-        p.changeDirection(Direction::directions[Direction::STAY]);
+
+        // ACTUAL MOVE (state only)
+        p.move(moveDir);
     }
-}
+
+    // SPRING TIMER
+    if (springState.active) {
+        springState.remainingCycles--;
+
+        if (springState.remainingCycles <= 0) {
+            springState.active = false;
+            springState.speed = 0;
+
+            // Reset spring state ONLY (no drawing)
+            for (auto spring : game.getSprings()) {
+                spring->setCompressed(false);
+            }
+
+            p.changeDirection(Direction::directions[Direction::STAY]);
+        }
+    }
 }
 
 void Player::draw()
 {
-    p.draw();
+    // DEPRECATED: Use Screen buffer instead
+    // All rendering now happens through Game::renderFrame()
 }
 
 void Player::erase()
 {
-    p.draw(underChar);
+    // DEPRECATED: Use Screen buffer instead
 }
 
 // --- INVENTORY LOGIC ---
@@ -225,11 +204,6 @@ void Player::tryDropBomb(Game& game) {
     auto bomb = std::make_unique<Bomb>(bx, by);
     bomb->plant(5); // Start the 5-tick countdown
     game.addObject(std::move(bomb));
-    game.getScreen().setCharAt(bx, by, '0');
-    gotoxy(bx, by);
-    std::cout << '0' << std::flush;
-
-    this->draw();
 }
 
 void Player::tryDropKey(Game& game) {
@@ -244,15 +218,6 @@ void Player::tryDropKey(Game& game) {
 
     // הוספת המפתח למשחק
     game.addObject(std::make_unique<Key>(keyX, keyY, droppedKeyId));
-    
-    // עדכון הזיכרון של המסך
-    game.getScreen().setCharAt(keyX, keyY, 'K');
-    
-    // עדכון מסך
-    gotoxy(keyX, keyY);
-    std::cout << 'K' << std::flush;
-    
-    this->draw();
 }
 
 void Player::tryDropTorch(Game& game) {
@@ -265,11 +230,6 @@ void Player::tryDropTorch(Game& game) {
     int ty = dropY - dir.dy();
 
     game.addObject(std::make_unique<Torch>(tx, ty));
-    game.getScreen().setCharAt(tx, ty, '!');
-    gotoxy(tx, ty);
-    std::cout << '!' << std::flush;
-
-    this->draw();
 }
 
 

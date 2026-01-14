@@ -82,17 +82,6 @@ void Switch::updateAllSwitches(Game& game) {
         if (covered) {
             continue;
         }
-        
-        // Redraw if state changed or it's a toggle that was just activated
-        if (shouldToggle || s->renderChar() != screen.getCharAt(sx, sy)) {
-            screen.setCharAt(sx, sy, s->renderChar());
-            screen.setColorAt(sx, sy, s->renderColor());
-            screen.drawCell(sx, sy);
-            
-            // Redraw players if they're on the switch
-            if (p1.getPosition().getX() == sx && p1.getPosition().getY() == sy) p1.draw();
-            if (p2.getPosition().getX() == sx && p2.getPosition().getY() == sy) p2.draw();
-        }
     }
 
     // 2. Update obstacles (existing code remains the same)
@@ -110,16 +99,6 @@ void Switch::updateAllSwitches(Game& game) {
 
         if (obs->isOpen() != shouldOpen) {
             obs->setOpen(shouldOpen);
-            int ox = obs->getPosition().getX();
-            int oy = obs->getPosition().getY();
-            char visual = shouldOpen ? ' ' : '*';
-            
-            screen.setCharAt(ox, oy, visual);
-            screen.setColorAt(ox, oy, shouldOpen ? 2 : 7);
-            screen.drawCell(ox, oy);
-
-            if (p1.getPosition().getX() == ox && p1.getPosition().getY() == oy) p1.draw();
-            if (p2.getPosition().getX() == ox && p2.getPosition().getY() == oy) p2.draw();
         }
     }
 }
