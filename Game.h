@@ -59,9 +59,8 @@ public:
     void damagePlayer(Player& player, int amount);
     void damagePlayersInManhattanRange(const Point& center, int range, int amount);
 
-    
-
-
+    Room* getCurrentRoom() { return currentRoom; }
+    void markVisionDirty() { visionDirty = true; }
 
     // Object Management
     void addObject(std::unique_ptr<GameObject> obj);

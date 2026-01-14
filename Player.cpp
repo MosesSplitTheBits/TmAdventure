@@ -111,6 +111,11 @@ void Player::move(Game& game)
 
         // ACTUAL MOVE (state only)
         p.move(moveDir);
+        
+        // Mark vision dirty in dark rooms so fog updates
+        if (game.getCurrentRoom() && game.getCurrentRoom()->isDark()) {
+            game.markVisionDirty();
+        }
     }
 
     // SPRING TIMER
@@ -230,6 +235,11 @@ void Player::tryDropTorch(Game& game) {
     int ty = dropY - dir.dy();
 
     game.addObject(std::make_unique<Torch>(tx, ty));
+    
+    // Mark vision dirty so torch light appears immediately
+    if (game.getCurrentRoom() && game.getCurrentRoom()->isDark()) {
+        game.markVisionDirty();
+    }
 }
 
 

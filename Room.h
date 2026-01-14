@@ -29,6 +29,13 @@ public:
     int getID() const { return roomId; }
 
     const std::vector<std::string>& getMapData() const { return mapData; }
+    std::vector<std::string>& getMapData() { return mapData; }
+    
+    void setCell(int x, int y, char c) {
+        if (y >= 0 && y < (int)mapData.size() && x >= 0 && x < (int)mapData[y].size()) {
+            mapData[y][x] = c;
+        }
+    }
 
     void setNext(Room* r) { next = r; }
     void setPrev(Room* r) { prev = r; }

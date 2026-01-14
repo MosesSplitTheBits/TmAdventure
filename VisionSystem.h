@@ -3,6 +3,7 @@
 
 class Room;
 class Player;
+class Torch;
 
 class VisionSystem {
 public:
@@ -16,7 +17,8 @@ public:
     Grid compute(
         const Room& room,
         const Player& p1,
-        const Player& p2
+        const Player& p2,
+        const std::vector<Torch*>& torches
     );
 
 private:

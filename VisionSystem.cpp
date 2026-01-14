@@ -2,12 +2,14 @@
 #include "Room.h"
 #include "Player.h"
 #include "Point.h"
+#include "Torch.h"
 
 
 VisionSystem::Grid VisionSystem::compute(
     const Room& room,
     const Player& p1,
-    const Player& p2
+    const Player& p2,
+    const std::vector<Torch*>& torches
 ) {
     int width  = room.getMapData()[0].size();
     int height = room.getMapData().size();
@@ -38,6 +40,14 @@ VisionSystem::Grid VisionSystem::compute(
         Point pos = p2.getPosition();
         int radius = (p2.hasTorch()) ? 4 : 1;
         revealCircle(grid, pos.getX(), pos.getY(), radius);
+    }
+
+    // Ground torches (not collected)
+    for (auto* torch : torches) {
+        if (torch && !torch->isCollected()) {
+            Point pos = torch->getPosition();
+            revealCircle(grid, pos.getX(), pos.getY(), 3);
+        }
     }
 
     return grid;

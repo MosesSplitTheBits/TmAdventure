@@ -119,10 +119,6 @@ void Game::run()
         if (!p1.isWaitingAtDoor()) p1.move(*this);
         if (!p2.isWaitingAtDoor()) p2.move(*this);
 
-        if (currentRoom && currentRoom->isDark()) {
-            visionDirty = true;
-        }
-
         if (!handleEvents()) {
             if (isGameWon()) {
                 system("cls");
@@ -154,7 +150,7 @@ void Game::run()
         // Render after all game logic completes
         renderFrame();
 
-        Sleep(100);
+        Sleep(40);
     }
 }
 
@@ -169,7 +165,7 @@ void Game::renderFrame()
     screen.loadMap(mapData);
 
     // 3. Apply vision system (fog of war)
-    auto vision = visionSystem.compute(*currentRoom, p1, p2);
+    auto vision = visionSystem.compute(*currentRoom, p1, p2, getTorches());
     screen.applyVision(mapData, vision);
     
     // 4. Render all objects to buffer
@@ -190,7 +186,7 @@ void Game::renderFrame()
     }
     
     
-    // 5. Render players to buffer (skip if waiting at door - prevents ghosting)
+    // 5. Render players to buffer
     if (!p1.isWaitingAtDoor()) {
         screen.setCharAt(p1.getPosition().getX(), p1.getPosition().getY(), p1.renderChar());
         screen.setColorAt(p1.getPosition().getX(), p1.getPosition().getY(), p1.renderColor());
@@ -309,6 +305,19 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
                 if (auto obj = ObjectFactory::createFromTile(*this, x, y, tile)) {
                     addObject(std::move(obj));
                 }
+            }
+        }
+        
+        // Clear object markers from mapData (objects now in objects vector)
+        for (const auto& obj : objects) {
+            int x = obj->getPosition().getX();
+            int y = obj->getPosition().getY();
+            char typeChar = obj->typeChar();
+            // Clear pickupable objects and switches from map
+            if (typeChar == 'T' || typeChar == 'K' || typeChar == 'B' || 
+                typeChar == '!' || typeChar == 'S' || typeChar == 'P' || 
+                typeChar == '/' || typeChar == '?' || typeChar == 'X') {
+                currentRoom->setCell(x, y, ' ');
             }
         }
         

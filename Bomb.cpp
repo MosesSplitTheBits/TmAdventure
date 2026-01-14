@@ -44,6 +44,15 @@ void Bomb::handleBombExplosions(Game& game) {
                                 game.removeObjectAt(x, y);
                             }
                             
+                            // Destroy walls in mapData
+                            auto& mapData = game.getCurrentRoom()->getMapData();
+                            if (y < (int)mapData.size() && x < (int)mapData[y].size()) {
+                                char tile = mapData[y][x];
+                                if (tile == 'W' || tile == '*') {
+                                    game.getCurrentRoom()->setCell(x, y, ' ');
+                                }
+                            }
+                            
                             // Kill players in range
                             if (game.getp1().getPosition().getX() == x && game.getp1().getPosition().getY() == y) 
                             {
