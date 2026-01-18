@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include "Sound.h"
+#include "ResultsRecorder.h"
 
 
 std::vector<std::unique_ptr<Riddle>> Riddle::createFromMap(const std::vector<std::string>& mapData, int roomId) 
@@ -33,6 +34,17 @@ bool Riddle::interact(Game& game, Player& player)
         player.getMaxHP(),
         [&]() { game.damagePlayer(player, 1); } // -1 HP לכל טעות
     );
+    
+    if (game.getMode() == GameMode::Save && game.getResultsRecorder()) {
+        int mapIndex = getId() - 1;
+        const Puzzle& p = game.getPuzzles().getPuzzleData(mapIndex);
+        game.getResultsRecorder()->recordRiddle(
+            game.getGameTime(),
+            p.question,
+            "",  // empty string for answer field
+            solved
+        );
+    }
 
     if (solved) {
         Sound::RiddleCorrect();

@@ -1,0 +1,30 @@
+#pragma once
+#include <vector>
+#include <string>
+#include <memory>
+#include <map>
+#include "Screen.h"
+#include "Player.h"
+#include "MapLoader.h"
+#include "Room.h"
+#include "GameObject.h"
+#include "Door.h"
+#include "Key.h"
+#include "Switch.h"
+#include "Obstacle.h"
+#include "Puzzle.h"
+#include "Riddle.h"
+#include "StatusBar.h"
+#include "Torch.h"
+#include "Bomb.h"
+#include "Spring.h"
+#include "PushableBlock.h"
+#include "Point.h"
+#include "VisionSystem.h"
+#include "InputManager.h"
+#include "StepsRecorder.h"
+#include "StepsLoader.h"
+#include "GameMode.h"
+#include "ResultsRecorder.h"
+
+class Test {};

@@ -25,6 +25,7 @@
 #include "StepsRecorder.h"
 #include "StepsLoader.h"
 #include "GameMode.h"
+#include "ResultsRecorder.h"
 
 class Game {
 private:
@@ -35,6 +36,7 @@ private:
     InputManager inputManager; // For handling input
     std::unique_ptr<StepsRecorder> stepsRecorder; // For recording steps
     std::unique_ptr<StepsLoader> stepsLoader; // For loading steps
+    std::unique_ptr<ResultsRecorder> resultsRecorder; // For recording results
     Door* lastUsedDoor = nullptr;
     VisionSystem visionSystem;
     // The main list of objects in the current room
@@ -51,6 +53,7 @@ private:
     
     StatusBar statusBar;
     bool visionDirty = true;
+    int gameTime = 0;
 
     // Full-frame rendering method
     void renderFrame();
@@ -95,6 +98,9 @@ public:
     Door* getLastUsedDoor() { return lastUsedDoor; }
     StatusBar& getStatusBar() { return statusBar; }
     Room* getCurrentRoom() const { return currentRoom; }
+    int getGameTime() const { return gameTime; }
+    GameMode getMode() const { return mode; }
+    ResultsRecorder* getResultsRecorder() { return resultsRecorder.get(); }
 
     //setter for lastUsedDoor
     void setLastUsedDoor(Door* door) { lastUsedDoor = door; }

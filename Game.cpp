@@ -28,6 +28,9 @@
 #include "MapLoader.h"
 #include "VisionSystem.h"
 #include "InputAction.h"
+#include "ResultsRecorder.h"
+#include "StepsRecorder.h"
+#include "StepsLoader.h"
 
 
 
@@ -42,7 +45,7 @@ Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom, GameMode 
     // CHECK MODE
     if (mode == GameMode::Save) {
         stepsRecorder = std::make_unique<StepsRecorder>("adv-world.steps");
-
+        resultsRecorder = std::make_unique<ResultsRecorder>("adv-world.result");
         unsigned int seed = static_cast<unsigned int>(std::time(nullptr));
         std::srand(seed);
         stepsRecorder->setRandomSeed(seed);
@@ -111,7 +114,7 @@ void Game::run()
     // Initial render
     renderFrame();
     
-    int gameTime = 0; //record time played
+    gameTime = 0; //record time played
     while (true)
     {
         InputAction action = inputManager.getAction(gameTime);
@@ -158,6 +161,9 @@ default:
 
         if (!handleEvents()) {
             if (isGameWon()) {
+                if (mode == GameMode::Save && resultsRecorder) {
+                    resultsRecorder->recordGameEnd(gameTime, 0);
+                }
                 system("cls");
                 std::cout << "\n\n\n";
                 std::cout << "\t\t**********************************\n";
@@ -170,6 +176,9 @@ default:
             }
             else if (p1.isDead() || p2.isDead()) 
             {
+                if (mode == GameMode::Save && resultsRecorder) {
+                    resultsRecorder->recordGameEnd(gameTime, 0);
+                }
                 system("cls");
                 std::cout << "\n\n\n";
                 std::cout << "\t\t**********************************\n";
@@ -310,6 +319,7 @@ bool Game::isGameWon() const {
 }
 
 void Game::loadLevel(Room* nextRoom, bool comingBack) {
+
     // 1. Save current room state before leaving
     if (currentRoom) {
         savedRoomObjects[currentRoom] = std::move(objects);
@@ -319,6 +329,10 @@ void Game::loadLevel(Room* nextRoom, bool comingBack) {
     currentRoom = nextRoom;
     p1.setWaitingAtDoor(false);
     p2.setWaitingAtDoor(false);
+    
+    if (mode == GameMode::Save && resultsRecorder) {
+        resultsRecorder->recordScreenChange(gameTime, currentRoom->getID());
+    }
     
     // 3. Load Map Background (Walls and Floor)
     const auto& mapData = currentRoom->getMapData();
@@ -468,6 +482,10 @@ void Game::damagePlayer(Player& player, int amount)
 {
     if (player.isWaitingAtDoor()) return; // לא פוגעים בשחקן "שנעלם"
     player.takeDamage(amount);
+    
+    if (player.isDead() && mode == GameMode::Save && resultsRecorder) {
+        resultsRecorder->recordLifeLost(gameTime);
+    }
 }
 
 void Game::damagePlayersInManhattanRange(const Point& center, int range, int amount)

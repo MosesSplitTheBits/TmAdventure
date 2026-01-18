@@ -30,6 +30,8 @@ public:
     int getTotalAttempts() const { return totalAttempts; }
     int getTotalWrongAttempts() const { return totalWrongAttempts; }
     void resetCounters() { totalAttempts = 0; totalWrongAttempts = 0; }
+    
+    const Puzzle& getPuzzleData(int mapIndex) const { return puzzles[mapIndex]; }
 
     // setter & getters - for limits
     void setMaxTotalAttempts(int max) { maxTotalAttempts = max; }
