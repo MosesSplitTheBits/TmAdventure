@@ -27,16 +27,35 @@
 #include "Bomb.h"
 #include "MapLoader.h"
 #include "VisionSystem.h"
+#include "InputAction.h"
 
-Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom)
-    : screen(s), p1(p1_ref), p2(p2_ref), currentRoom(nullptr)
+
+
+
+Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom, GameMode mode)
+    : screen(s), p1(p1_ref), p2(p2_ref), currentRoom(nullptr), mode(mode),inputManager(mode, nullptr)
 {
     puzzles.resetCounters(); 
     loadLevel(startRoom);
     visionDirty = true;
+
+    // CHECK MODE
+    if (mode == GameMode::Save) {
+        stepsRecorder = std::make_unique<StepsRecorder>("adv-world.steps");
+
+        unsigned int seed = static_cast<unsigned int>(std::time(nullptr));
+        std::srand(seed);
+        stepsRecorder->setRandomSeed(seed);
+    }
+    if (mode == GameMode::Load) {
+    stepsLoader = std::make_unique<StepsLoader>("adv-world.steps");
+    std::srand(stepsLoader->getRandomSeed());
+}
+    // Initialize InputManager with StepsLoader if in Load mode
+    inputManager = InputManager(mode, stepsLoader.get());
 }
 
-void startGame()
+void startGame(GameMode mode, bool silent)
 {
     system("cls");
     std::srand((unsigned)std::time(nullptr));
@@ -75,7 +94,7 @@ void startGame()
     Point p2_start = Point(60, 10, Direction::directions[Direction::STAY], '&');
     Player player2(keys2, the_screen, p2_start);
 
-    Game game(the_screen, player1, player2, room1);
+    Game game(the_screen, player1, player2, room1, mode);
     game.run();
 
     delete room1;
@@ -91,30 +110,48 @@ void Game::run()
 
     // Initial render
     renderFrame();
-
+    
+    int gameTime = 0; //record time played
     while (true)
     {
-        if (_kbhit())
-        {
-            char ch = _getch();
+        InputAction action = inputManager.getAction(gameTime);
+        // RECORD STEP IF IN SAVE MODE
+        if (mode == GameMode::Save && stepsRecorder && action.type != ActionType::None) {
+    stepsRecorder->recordStep(gameTime, action);
+}
+        gameTime++;
 
-            if (ch == 'h' || ch == 'H') {
-                if (pause()) break;
-            }
+switch (action.type) // Handle input actions
+{
+case ActionType::Pause:
+    if (pause()) return;
+    break;
 
-            if (!p1.isWaitingAtDoor()) {
-                if (ch == p1_drop_key || ch == toupper(p1_drop_key)) {
-                    p1.tryDropItem(*this);
-                }
-                p1.keyPreesed(ch);
-            }
-            if (!p2.isWaitingAtDoor()) {
-                if (ch == p2_drop_key || ch == toupper(p2_drop_key)) {
-                     p2.tryDropItem(*this);
-                }
-                p2.keyPreesed(ch);
-            }
-        }
+case ActionType::Quit:
+    return;
+
+case ActionType::DropItem:
+    if (action.playerId == 0 && !p1.isWaitingAtDoor()) {
+        p1.tryDropItem(*this);
+    }
+    else if (action.playerId == 1 && !p2.isWaitingAtDoor()) {
+        p2.tryDropItem(*this);
+    }
+    break;
+
+case ActionType::Move:
+    if (!p1.isWaitingAtDoor()) {
+        p1.keyPreesed(action.rawKey);
+    }
+    if (!p2.isWaitingAtDoor()) {
+        p2.keyPreesed(action.rawKey);
+    }
+    break;
+
+case ActionType::None:
+default:
+    break;
+}
 
         if (!p1.isWaitingAtDoor()) p1.move(*this);
         if (!p2.isWaitingAtDoor()) p2.move(*this);

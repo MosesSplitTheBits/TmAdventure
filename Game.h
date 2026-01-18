@@ -21,12 +21,20 @@
 #include "PushableBlock.h"
 #include "Point.h"
 #include "VisionSystem.h"
+#include "InputManager.h"
+#include "StepsRecorder.h"
+#include "StepsLoader.h"
+#include "GameMode.h"
 
 class Game {
 private:
     Screen& screen;
     Player& p1;
     Player& p2;
+    GameMode mode;
+    InputManager inputManager; // For handling input
+    std::unique_ptr<StepsRecorder> stepsRecorder; // For recording steps
+    std::unique_ptr<StepsLoader> stepsLoader; // For loading steps
     Door* lastUsedDoor = nullptr;
     VisionSystem visionSystem;
     // The main list of objects in the current room
@@ -48,7 +56,7 @@ private:
     void renderFrame();
 
 public:
-    Game(Screen& s, Player& p1, Player& p2, Room* startRoom);
+    Game(Screen& s, Player& p1, Player& p2, Room* startRoom, GameMode mode);
     void run();
     bool handleEvents();
     bool pause();
@@ -106,4 +114,4 @@ public:
 };
 
 // --- IMPORTANT: This must be OUTSIDE the class ---
-void startGame();
+void startGame(GameMode mode, bool silent);
