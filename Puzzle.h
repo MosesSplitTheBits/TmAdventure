@@ -4,8 +4,10 @@
 #include <conio.h>
 #include <limits>
 #include <functional>
+#include <vector>
 
 struct Puzzle {
+    int roomId;
     std::string question;
     std::string answers[4];
     int correctIndex;
@@ -17,7 +19,7 @@ public:
 
     // CHANGED: showPuzzle יודע להציג HP ולקנוס על טעות באמצעות callback
     bool showPuzzle(
-        int mapIndex,
+        const Puzzle& puzzle,
         int riddleId,
         const std::function<int()>& getHp,
         int maxHp,
@@ -32,6 +34,7 @@ public:
     void resetCounters() { totalAttempts = 0; totalWrongAttempts = 0; }
     
     const Puzzle& getPuzzleData(int mapIndex) const { return puzzles[mapIndex]; }
+    const Puzzle& getPuzzleForRoom(int roomId) const;
 
     // setter & getters - for limits
     void setMaxTotalAttempts(int max) { maxTotalAttempts = max; }
@@ -44,7 +47,7 @@ public:
     }
 
 private:
-    Puzzle puzzles[3];
+    std::vector<Puzzle> puzzles;
     int totalAttempts;
     int totalWrongAttempts;
     int maxTotalAttempts; // Disabled

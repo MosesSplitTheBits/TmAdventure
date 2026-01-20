@@ -27,8 +27,10 @@ bool Riddle::interact(Game& game, Player& player)
         return true;
     }
 
+    const Puzzle& puzzle = game.getPuzzles().getPuzzleForRoom(getId());
+
     const bool solved = game.getPuzzles().showPuzzle(
-        getId() - 1,
+        puzzle,
         getId(),
         [&]() { return player.getHP(); },
         player.getMaxHP(),
@@ -36,11 +38,9 @@ bool Riddle::interact(Game& game, Player& player)
     );
     
     if (game.getMode() == GameMode::Save && game.getResultsRecorder()) {
-        int mapIndex = getId() - 1;
-        const Puzzle& p = game.getPuzzles().getPuzzleData(mapIndex);
         game.getResultsRecorder()->recordRiddle(
             game.getGameTime(),
-            p.question,
+            puzzle.question,
             "",  // empty string for answer field
             solved
         );

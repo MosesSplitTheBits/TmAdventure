@@ -1,4 +1,5 @@
 #include "Puzzle.h"
+#include "RiddleLoader.h"
 #include <iostream>
 #include <conio.h>
 #include <cstdlib>
@@ -10,39 +11,18 @@ PuzzleManager::PuzzleManager()
       maxTotalAttempts(0), // Disabled
       maxWrongAttempts(3)
 {
-    // map 0 – puzzle 1
-    puzzles[0].question = "Solve for X: 2X + 3 = 11";
-    puzzles[0].answers[0] = "1";
-    puzzles[0].answers[1] = "2";
-    puzzles[0].answers[2] = "3";
-    puzzles[0].answers[3] = "4";
-    puzzles[0].correctIndex = 3;
-
-    // map 1 – puzzle 2
-    puzzles[1].question = "What is the capital of France?";
-    puzzles[1].answers[0] = "Berlin";
-    puzzles[1].answers[1] = "Paris";
-    puzzles[1].answers[2] = "Rome";
-    puzzles[1].answers[3] = "Madrid";
-    puzzles[1].correctIndex = 1;
-
-    // map 2 – puzzle 3
-    puzzles[2].question = "Which animal barks?";
-    puzzles[2].answers[0] = "Cat";
-    puzzles[2].answers[1] = "Cow";
-    puzzles[2].answers[2] = "Dog";
-    puzzles[2].answers[3] = "Bird";
-    puzzles[2].correctIndex = 2;
+    // Load riddles from file
+    puzzles = RiddleLoader::load("riddles.txt");
 }
 
 bool PuzzleManager::showPuzzle(
-    int mapIndex,
+    const Puzzle& puzzle,
     int riddleId,
     const std::function<int()>& getHp,
     int maxHp,
     const std::function<void()>& onWrongAttempt
 ) {
-    Puzzle& p = puzzles[mapIndex];
+    const Puzzle& p = puzzle;
 
     while (true) {
         system("cls");
@@ -103,5 +83,14 @@ bool PuzzleManager::showPuzzle(
 }
 
 int PuzzleManager::getPuzzleCount() const {
-    return 3;
+    return static_cast<int>(puzzles.size());
+}
+
+const Puzzle& PuzzleManager::getPuzzleForRoom(int roomId) const {
+    for (const auto& puzzle : puzzles) {
+        if (puzzle.roomId == roomId) {
+            return puzzle;
+        }
+    }
+    throw std::runtime_error("No puzzle found for room " + std::to_string(roomId));
 }
