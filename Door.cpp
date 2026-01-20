@@ -12,6 +12,7 @@
 
 void Door::makeDoorHollow(int id, const std::vector<Door*>& doors, Screen& screen) 
 {
+    (void)screen;
     std::vector<std::pair<int,int>> positions;
     for (auto d : doors) {
         // Only process '4' doors
@@ -20,32 +21,6 @@ void Door::makeDoorHollow(int id, const std::vector<Door*>& doors, Screen& scree
         }
     }
     if (positions.empty()) return;
-
-    int minx = positions[0].first, maxx = positions[0].first;
-    int miny = positions[0].second, maxy = positions[0].second;
-    for (auto &p : positions) {
-        minx = std::min(minx, p.first); maxx = std::max(maxx, p.first);
-        miny = std::min(miny, p.second); maxy = std::max(maxy, p.second);
-    }
-
-    int color = 2;
-    for (auto d : doors) if (d && d->getId() == id) { color = d->renderColor(); break; }
-
-    std::set<std::pair<int,int>> posset(positions.begin(), positions.end());
-
-    bool isSmallDoor = (maxx - minx < 2) || (maxy - miny < 1);
-
-    for (int y = miny; y <= maxy; ++y) {
-        for (int x = minx; x <= maxx; ++x) {
-            if (!posset.count({x,y})) continue;
-            
-            bool keepAs4 = false;
-            if (!isSmallDoor) {
-                // Keep frame: Top, Left, Right (Bottom is cleared for walking through)
-                keepAs4 = (x == minx || x == maxx || y == miny);
-            }
-        }
-    }
 }
 
 void Door::animateOpening(int id, const std::vector<Door*>& doors, Screen& screen) 

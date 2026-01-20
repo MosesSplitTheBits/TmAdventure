@@ -34,6 +34,13 @@ std::unique_ptr<GameObject> ObjectFactory::createFromTile(Game& game, int x, int
         case '3':
         {
             Room* prev = game.getCurrentRoom()->getPrev();
+            if(prev == nullptr) 
+            {
+                // First room has no previous room: remove the '3' door tile entirely
+                // so it won't render from the base map.
+                game.getCurrentRoom()->setCell(x, y, ' ');
+                return nullptr;
+            }
             return std::make_unique<Door>(x, y, room, tile, prev, false);
         }
         

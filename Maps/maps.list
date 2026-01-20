@@ -1,0 +1,11 @@
+# Ordered list of maps to load (one per line)
+# You can reorder lines or add new maps.
+#
+# Supported formats:
+#   map_1.txt
+#   Maps/map_1.txt
+#   1|Maps/map_1.txt   (explicit roomId; useful if riddles/puzzles use roomId)
+
+1|map_1.txt
+2|map_2.txt
+3|map_3.txt

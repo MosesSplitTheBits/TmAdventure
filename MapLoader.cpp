@@ -2,8 +2,25 @@
 #include <fstream>
 #include <stdexcept>
 #include <filesystem>
+#include <unordered_set>
 
 namespace {
+    std::string Trim(const std::string& s) {
+        size_t start = 0;
+        while (start < s.size() && (s[start] == ' ' || s[start] == '\t')) ++start;
+        size_t end = s.size();
+        while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t')) --end;
+        return s.substr(start, end - start);
+    }
+
+    bool IsAllDigits(const std::string& s) {
+        if (s.empty()) return false;
+        for (char c : s) {
+            if (c < '0' || c > '9') return false;
+        }
+        return true;
+    }
+
     std::string UnderscoreMapFilenameIfNeeded(const std::string& filename) {
         // Converts map1.txt -> map_1.txt, map12.txt -> map_12.txt
         // Leaves other filenames unchanged.
@@ -27,14 +44,12 @@ namespace {
         std::ifstream file(p);
         return file;
     }
-}
 
-std::vector<std::string> MapLoader::load(const std::string& path) {
-    std::filesystem::path p(path);
+    std::ifstream OpenWithCandidatesOrThrow(std::filesystem::path& p, const std::string& originalPath, bool allowUnderscoreMapVariant) {
+        // Try a few likely candidates (relative to CWD) before failing.
+        std::ifstream file = TryOpen(p);
+        if (file) return file;
 
-    // Try a few likely candidates (relative to CWD) before failing.
-    std::ifstream file = TryOpen(p);
-    if (!file) {
         std::vector<std::filesystem::path> candidates;
         const auto cwd = std::filesystem::current_path();
 
@@ -51,9 +66,9 @@ std::vector<std::string> MapLoader::load(const std::string& path) {
             }
         }
 
-        // 3) map1.txt -> map_1.txt variants
+        // 3) map1.txt -> map_1.txt variants (only for actual map files)
         const std::string filename = p.filename().string();
-        const std::string underscored = UnderscoreMapFilenameIfNeeded(filename);
+        const std::string underscored = allowUnderscoreMapVariant ? UnderscoreMapFilenameIfNeeded(filename) : filename;
         if (underscored != filename) {
             candidates.push_back(p.parent_path() / underscored);
             candidates.push_back(std::filesystem::path("Maps") / underscored);
@@ -85,14 +100,18 @@ std::vector<std::string> MapLoader::load(const std::string& path) {
             file = TryOpen(cand);
             if (file) {
                 p = cand;
-                break;
+                return file;
             }
         }
 
-        if (!file) {
-            throw std::runtime_error("Could not open map file: " + path);
-        }
+        throw std::runtime_error("Could not open map file: " + originalPath);
     }
+}
+
+std::vector<std::string> MapLoader::load(const std::string& path) {
+    std::filesystem::path p(path);
+
+    std::ifstream file = OpenWithCandidatesOrThrow(p, path, /*allowUnderscoreMapVariant=*/true);
 
     std::vector<std::string> map;
     std::string line;
@@ -117,4 +136,60 @@ std::vector<std::string> MapLoader::load(const std::string& path) {
     }
 
     return map;
+}
+
+void MapLoader::forEachMapListEntry(const std::string& listPath,
+                                   const std::function<void(const MapEntry&)>& onEntry) {
+    std::filesystem::path p(listPath);
+    std::ifstream file = OpenWithCandidatesOrThrow(p, listPath, /*allowUnderscoreMapVariant=*/false);
+
+    std::unordered_set<int> usedRoomIds;
+    std::string line;
+    int nextAutoId = 1;
+    bool any = false;
+
+    while (std::getline(file, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+
+        const std::string trimmed = Trim(line);
+        if (trimmed.empty()) continue;
+        if (trimmed.rfind("#", 0) == 0) continue;
+        if (trimmed.rfind("//", 0) == 0) continue;
+
+        int roomId = -1;
+        std::string mapPath;
+
+        const size_t bar = trimmed.find('|');
+        if (bar != std::string::npos) {
+            const std::string left = Trim(trimmed.substr(0, bar));
+            const std::string right = Trim(trimmed.substr(bar + 1));
+            if (IsAllDigits(left)) {
+                roomId = std::stoi(left);
+                mapPath = right;
+            } else {
+                mapPath = trimmed;
+            }
+        } else {
+            mapPath = trimmed;
+        }
+
+        if (mapPath.empty()) {
+            throw std::runtime_error("Map list contains an empty path: " + listPath);
+        }
+
+        if (roomId < 0) {
+            roomId = nextAutoId++;
+        }
+
+        if (!usedRoomIds.insert(roomId).second) {
+            throw std::runtime_error("Duplicate roomId " + std::to_string(roomId) + " in map list: " + listPath);
+        }
+
+        any = true;
+        onEntry(MapEntry{ roomId, mapPath });
+    }
+
+    if (!any) {
+        throw std::runtime_error("Map list is empty: " + listPath);
+    }
 }

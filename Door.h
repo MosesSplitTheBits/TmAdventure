@@ -16,7 +16,16 @@ public:
     char typeChar() const override { return getChar(); }
     bool isPassable() const override { return !isLocked; }
     char renderChar() const override { return getChar(); }
-    int renderColor() const override { return isLocked ? 4 : 2; } // Red if locked, Green if unlocked
+    int renderColor() const override {
+        // Keep locked doors red.
+        if (isLocked) return 4;
+
+        // Victory door: type '4' with no target room -> gold/amber.
+        if (getChar() == '4' && targetRoom == nullptr) return 14;
+
+        // Normal open door -> green.
+        return 2;
+    }
     bool interact(Game& game, Player& player) override;
 
 

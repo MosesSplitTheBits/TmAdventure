@@ -36,9 +36,10 @@
 
 
 Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom, GameMode mode)
-    : screen(s), p1(p1_ref), p2(p2_ref), currentRoom(nullptr), mode(mode),inputManager(mode, nullptr)
+    : screen(s), p1(p1_ref), p2(p2_ref), mode(mode), inputManager(mode, nullptr)
 {
     puzzles.resetCounters(); 
+    currentRoom = nullptr;
     loadLevel(startRoom);
     visionDirty = true;
 
@@ -60,33 +61,54 @@ Game::Game(Screen& s, Player& p1_ref, Player& p2_ref, Room* startRoom, GameMode 
 
 void startGame(GameMode mode, bool silent)
 {
+    (void)silent;
     system("cls");
     std::srand((unsigned)std::time(nullptr));
 
-    Room* room1 = nullptr;
-    Room* room2 = nullptr;
-    Room* room3 = nullptr;
+    std::vector<std::unique_ptr<Room>> rooms;
+    Room* head = nullptr;
+    Room* tail = nullptr;
 
-    try 
+    try
     {
-        room1 = new Room(MapLoader::load("Maps/map_1.txt"), 1);
-        room2 = new Room(MapLoader::load("Maps/map_2.txt"), 2);
-        room3 = new Room(MapLoader::load("Maps/map_3.txt"), 3);
-        //set first room to dark
-        room1->setDark(true);
+        // Ordered maps are defined in a file (easy to reorder / add new maps)
+        // See Maps/maps.list
+        // Build a dynamic linked chain in one pass: head/tail and prev/next
+        MapLoader::forEachMapListEntry("Maps/maps.list", [&](const MapLoader::MapEntry& e) {
+            auto room = std::make_unique<Room>(MapLoader::load(e.path), e.roomId);
+            Room* roomPtr = room.get();
+
+            if (!head) {
+                head = roomPtr;
+                roomPtr->setPrev(nullptr);
+            }
+
+            if (tail) {
+                tail->setNext(roomPtr);
+                roomPtr->setPrev(tail);
+            }
+
+            tail = roomPtr;
+            rooms.push_back(std::move(room));
+        });
+
+        if (!head) {
+            throw std::runtime_error("No maps were loaded (maps.list produced 0 entries)");
+        }
+
+        // Tail has no next => final room
+        tail->setNext(nullptr);
+
+        // set first room to dark (as before)
+        head->setDark(true);
     }
-    catch (const std::exception& e) 
+    catch (const std::exception& e)
     {
         std::cerr << "Failed to load maps: " << e.what() << std::endl;
         _getch();
         return;
     }
 
-    room1->setNext(room2);
-    room2->setPrev(room1);
-    room2->setNext(room3);
-    room3->setPrev(room2);
-    room3->setNext(nullptr); // Victory room
     Screen the_screen;
 
     const char keys1[7] = { 'w', 'x', 'a', 'd', 's', 'e', '\0' };
@@ -97,19 +119,13 @@ void startGame(GameMode mode, bool silent)
     Point p2_start = Point(60, 10, Direction::directions[Direction::STAY], '&');
     Player player2(keys2, the_screen, p2_start);
 
-    Game game(the_screen, player1, player2, room1, mode);
+    Game game(the_screen, player1, player2, head, mode);
     game.run();
-
-    delete room1;
-    delete room2;
-    delete room3;
 }
 
 void Game::run()
 {
     statusBar.resetRunTime();
-    const char p1_drop_key = 'e';
-    const char p2_drop_key = 'o';
 
     // Initial render
     renderFrame();
@@ -287,7 +303,9 @@ bool Game::handleEvents() {
     Door::updateProximityDoors(*this);
     Bomb::handleBombExplosions(*this);
 
-    if (currentRoom && currentRoom->getID() == 3) 
+    const bool isFinalRoom = (currentRoom && currentRoom->getNext() == nullptr);
+
+    if (isFinalRoom) 
     {
         if (p1.hasWon()) p1.setWaitingAtDoor(true);
         if (p2.hasWon()) p2.setWaitingAtDoor(true);
@@ -299,7 +317,7 @@ bool Game::handleEvents() {
     }
 
     // Check for game end (only in final room when both actually won)
-    if (currentRoom && currentRoom->getID() == 3 && p1.hasWon() && p2.hasWon()) return false;
+    if (isFinalRoom && p1.hasWon() && p2.hasWon()) return false;
     return true;
 }
 
@@ -457,13 +475,13 @@ void Game::spawnPlayers(bool comingBack) {
     else {
         // Scan map for '3'
         const auto& map = currentRoom->getMapData();
-        for (int y = 0; y < map.size() && !foundSpawn; ++y) {
-            for (int x = 0; x < map[y].size(); ++x) {
+        for (size_t y = 0; y < map.size() && !foundSpawn; ++y) {
+            for (size_t x = 0; x < map[y].size(); ++x) {
                 if (map[y][x] == '3') {
-                    p1x = std::max(1, x - 4);
-                    p1y = y;
+                    p1x = std::max(1, static_cast<int>(x) - 4);
+                    p1y = static_cast<int>(y);
                     p2x = p1x;
-                    p2y = std::min(y + 1, Screen::MAX_Y);
+                    p2y = std::min(static_cast<int>(y) + 1, Screen::MAX_Y);
                     foundSpawn = true;
                     break;
                 }
