@@ -100,9 +100,6 @@ std::vector<std::string> MapLoader::load(const std::string& path) {
     while (std::getline(file, line)) {
         if (!line.empty() && line.back() == '\r') line.pop_back(); // CRLF fix
 
-        // אם אתה רוצה לאפשר שורות ריקות - אל תדלג
-        // כאן: מדלגים על שורה ריקה
-        // if (line.empty()) continue;
 
         map.push_back(line);
     }

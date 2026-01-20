@@ -214,23 +214,27 @@ void Game::renderFrame()
     auto vision = visionSystem.compute(*currentRoom, p1, p2, getTorches());
     screen.applyVision(mapData, vision);
     
-    // 4. Render all objects to buffer
+    // 4. Render all objects to buffer (first pass: non-PushableBlock objects)
+    for (const auto& obj : objects) {
+        if (dynamic_cast<PushableBlock*>(obj.get())) continue; // Skip blocks for now
+        
+        screen.setCharAt(obj->getPosition().getX(),
+                         obj->getPosition().getY(),
+                         obj->renderChar());
+        screen.setColorAt(obj->getPosition().getX(),
+                          obj->getPosition().getY(),
+                          obj->renderColor());
+    }
+    
+    // 4b. Render PushableBlocks on top (second pass)
     for (const auto& obj : objects) {
         if (auto pb = dynamic_cast<PushableBlock*>(obj.get())) {
             for (const auto& [x, y] : pb->getOccupiedTiles()) {
                 screen.setCharAt(x, y, pb->renderChar());
                 screen.setColorAt(x, y, pb->renderColor());
             }
-        } else {
-            screen.setCharAt(obj->getPosition().getX(),
-                             obj->getPosition().getY(),
-                             obj->renderChar());
-            screen.setColorAt(obj->getPosition().getX(),
-                              obj->getPosition().getY(),
-                              obj->renderColor());
         }
     }
-    
     
     // 5. Render players to buffer
     if (!p1.isWaitingAtDoor()) {

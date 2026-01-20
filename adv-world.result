@@ -1,3 +1,4 @@
-139 LIFE_LOST
-139 RIDDLE |Solve for X: 2X + 3 = 11||WRONG
-139 GAME_END 0
+161 RIDDLE |Solve for X: 2X + 3 = 11||CORRECT
+227 SCREEN 2
+388 RIDDLE |What is the capital of France?||CORRECT
+462 SCREEN 3
